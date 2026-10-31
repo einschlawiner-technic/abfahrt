@@ -1,0 +1,421 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#0a1a33">
+<title>Abfahrt</title>
+<link rel="manifest" href="manifest.json">
+<link rel="icon" href="icon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="icon-192.png">
+<style>
+  :root {
+    --board: #0a1a33;
+    --board-row: #0f2343;
+    --line: #1d3560;
+    --text: #ffffff;
+    --muted: #9fb3d1;
+    --yellow: #ffd200;
+    --red: #ff4d4d;
+    --green: #4cd964;
+    --accent: #e2002a;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; height: 100%; }
+  body {
+    background: var(--board);
+    color: var(--text);
+    font-family: "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    -webkit-tap-highlight-color: transparent;
+  }
+  button { font: inherit; color: inherit; background: none; border: 0; cursor: pointer; }
+  .hidden { display: none !important; }
+
+  /* ---------- Kopfzeile ---------- */
+  header {
+    position: sticky; top: 0; z-index: 5;
+    display: flex; align-items: center; gap: 12px;
+    padding: calc(10px + env(safe-area-inset-top)) 16px 10px;
+    background: var(--board);
+    border-bottom: 2px solid var(--accent);
+  }
+  header h1 {
+    flex: 1; margin: 0; font-size: 20px; font-weight: 700;
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  }
+  #clock { font-variant-numeric: tabular-nums; font-size: 20px; font-weight: 600; }
+  .iconbtn {
+    width: 40px; height: 40px; border-radius: 10px;
+    display: grid; place-items: center; background: var(--board-row);
+  }
+  .iconbtn svg { width: 22px; height: 22px; }
+
+  /* ---------- Auswahl ---------- */
+  #picker { padding: 12px 16px 40px; }
+  #search {
+    width: 100%; padding: 14px 16px; font-size: 17px;
+    border-radius: 12px; border: 1px solid var(--line);
+    background: var(--board-row); color: var(--text); outline: none;
+  }
+  #search:focus { border-color: var(--yellow); }
+  #search::placeholder { color: var(--muted); }
+  .group-title {
+    margin: 22px 0 6px; font-size: 13px; letter-spacing: .08em;
+    text-transform: uppercase; color: var(--muted);
+  }
+  .list { list-style: none; margin: 0; padding: 0; }
+  .list li button {
+    width: 100%; text-align: left; padding: 14px 4px;
+    font-size: 17px; border-bottom: 1px solid var(--line);
+    display: flex; justify-content: space-between; align-items: center; gap: 8px;
+  }
+  .list li button:active { background: var(--board-row); }
+  .list .star { color: var(--yellow); }
+  .hint { color: var(--muted); font-size: 14px; padding: 10px 4px; }
+
+  /* ---------- Abfahrtstafel ---------- */
+  #board-wrap { padding-bottom: 30px; }
+  .toolbar {
+    display: flex; gap: 8px; padding: 10px 16px; align-items: center; flex-wrap: wrap;
+  }
+  .chip {
+    padding: 7px 14px; border-radius: 999px; font-size: 14px;
+    border: 1px solid var(--line); color: var(--muted);
+  }
+  .chip.on { background: var(--yellow); color: #000; border-color: var(--yellow); font-weight: 600; }
+  .toolbar .spacer { flex: 1; }
+  #updated { color: var(--muted); font-size: 13px; }
+
+  table { width: 100%; border-collapse: collapse; }
+  thead th {
+    text-align: left; font-size: 12px; font-weight: 600; letter-spacing: .06em;
+    text-transform: uppercase; color: var(--muted);
+    padding: 6px 8px; border-bottom: 1px solid var(--line);
+  }
+  tbody tr:nth-child(odd) { background: var(--board-row); }
+  td { padding: 11px 8px; vertical-align: top; font-size: 17px; }
+  td.time { width: 64px; font-weight: 700; font-variant-numeric: tabular-nums; padding-left: 16px; }
+  td.time .rt { display: block; font-size: 14px; font-weight: 600; }
+  .ontime { color: var(--green); }
+  .late { color: var(--yellow); }
+  .cancel { color: var(--red); }
+  td.train { width: 84px; }
+  .badge {
+    display: inline-block; padding: 2px 7px; border-radius: 5px;
+    font-size: 14px; font-weight: 700; white-space: nowrap;
+    background: #fff; color: var(--board);
+  }
+  .badge.fv { background: var(--accent); color: #fff; }   /* Fernverkehr */
+  .badge.s  { background: #0074c8; color: #fff; }          /* S-Bahn */
+  .badge.r  { background: #ffffff; color: var(--board); }  /* Regional */
+  .badge.u  { background: #6b7a90; color: #fff; }          /* Stadtverkehr/Bus */
+  td.dest { font-weight: 600; }
+  td.dest .via { display: block; font-size: 13px; font-weight: 400; color: var(--muted); margin-top: 2px; }
+  td.dest .note { display: block; font-size: 13px; font-weight: 600; margin-top: 2px; }
+  tr.cancelled td.dest .name { text-decoration: line-through; color: var(--muted); }
+  td.track { width: 54px; text-align: right; font-weight: 700; padding-right: 16px; font-variant-numeric: tabular-nums; }
+  td.track.changed { color: var(--yellow); }
+  .empty { text-align: center; color: var(--muted); padding: 40px 16px; }
+  .err { color: var(--red); }
+  footer { padding: 16px; color: var(--muted); font-size: 13px; text-align: center; }
+  footer a { color: var(--muted); }
+
+  @media (max-width: 420px) {
+    td { font-size: 15px; padding: 10px 6px; }
+    td.time { width: 54px; padding-left: 12px; }
+    td.train { width: 70px; }
+    td.track { padding-right: 12px; width: 44px; }
+    .badge { font-size: 12px; padding: 2px 5px; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <button id="back" class="iconbtn hidden" aria-label="Bahnhof wählen">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>
+  </button>
+  <h1 id="title">Bahnhof wählen</h1>
+  <button id="fav" class="iconbtn hidden" aria-label="Als Favorit merken">
+    <svg viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path id="favpath" fill="none" d="M12 3l2.8 5.7 6.2.9-4.5 4.4 1.1 6.2L12 17.3 6.4 20.2l1.1-6.2L3 9.6l6.2-.9z"/></svg>
+  </button>
+  <span id="clock"></span>
+</header>
+
+<!-- Bahnhofsauswahl -->
+<main id="picker">
+  <input id="search" type="search" placeholder="Bahnhof suchen …" autocomplete="off">
+  <div id="results"></div>
+  <div id="lists"></div>
+</main>
+
+<!-- Abfahrtstafel -->
+<main id="board-wrap" class="hidden">
+  <div class="toolbar">
+    <button class="chip on" data-filter="train">Nur Züge</button>
+    <button class="chip" data-filter="all">Alle Verkehrsmittel</button>
+    <span class="spacer"></span>
+    <span id="updated"></span>
+  </div>
+  <table>
+    <thead><tr><th style="padding-left:16px">Zeit</th><th>Zug</th><th>Nach</th><th style="text-align:right;padding-right:16px">Steig</th></tr></thead>
+    <tbody id="rows"></tbody>
+  </table>
+  <div id="msg" class="empty hidden"></div>
+  <footer>Echtzeitdaten: ÖBB Scotty · <a id="scotty" href="#" target="_blank" rel="noopener">In ÖBB Scotty öffnen</a></footer>
+</main>
+
+<script src="stations.js"></script>
+<script>
+const $ = (s) => document.querySelector(s);
+const FILTERS = { train: "1111110000000000", all: "1111111111111111" };
+const BASE = "https://fahrplan.oebb.at/bin/";
+const REFRESH_MS = 30000;
+
+// ---------- kleine Helfer ----------
+const store = {
+  get(k, d) { try { const v = localStorage.getItem(k); return v ? JSON.parse(v) : d; } catch { return d; } },
+  set(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch {} },
+};
+const decoder = document.createElement("textarea");
+function unescapeHtml(s) { decoder.innerHTML = s || ""; return decoder.value; }
+function esc(s) { return String(s).replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c])); }
+
+// HAFAS liefert JavaScript statt JSON und erlaubt kein CORS – daher per <script> laden.
+let chain = Promise.resolve();
+function loadScript(url, globalName) {
+  const job = () => new Promise((resolve, reject) => {
+    delete window[globalName];
+    const s = document.createElement("script");
+    s.charset = "ISO-8859-1";
+    s.src = url + (url.includes("?") ? "&" : "?") + "_=" + Date.now();
+    const done = () => s.remove();
+    const timer = setTimeout(() => { done(); reject(new Error("Zeitüberschreitung")); }, 15000);
+    s.onload = () => { clearTimeout(timer); done(); resolve(window[globalName]); };
+    s.onerror = () => { clearTimeout(timer); done(); reject(new Error("Keine Verbindung zu ÖBB")); };
+    document.head.appendChild(s);
+  });
+  const p = chain.then(job, job);
+  chain = p.catch(() => {});
+  return p;
+}
+
+// ---------- Uhr ----------
+function tick() {
+  $("#clock").textContent = new Date().toLocaleTimeString("de-AT", { hour: "2-digit", minute: "2-digit" });
+}
+tick(); setInterval(tick, 1000);
+
+// ---------- Auswahl ----------
+function favorites() { return store.get("favs", []); }
+function recent() { return store.get("recent", []); }
+
+function stationButton(st, starred) {
+  return `<li><button data-id="${esc(st.id)}" data-name="${esc(st.n)}">
+    <span>${esc(st.n)}</span>${starred ? '<span class="star">★</span>' : ""}</button></li>`;
+}
+
+function renderLists() {
+  const favs = favorites();
+  const favIds = new Set(favs.map(f => f.id));
+  let html = "";
+  if (favs.length) html += `<div class="group-title">Favoriten</div><ul class="list">${favs.map(f => stationButton(f, true)).join("")}</ul>`;
+  const rec = recent().filter(r => !favIds.has(r.id)).slice(0, 4);
+  if (rec.length) html += `<div class="group-title">Zuletzt</div><ul class="list">${rec.map(r => stationButton(r)).join("")}</ul>`;
+  for (const g of ["Wien", "Niederösterreich"]) {
+    html += `<div class="group-title">${g}</div><ul class="list">${
+      STATIONS.filter(s => s.g === g).map(s => stationButton(s, favIds.has(s.id))).join("")}</ul>`;
+  }
+  $("#lists").innerHTML = html;
+}
+
+// Suche: erst lokale Liste, dann ÖBB-Stationssuche (auf Wien/NÖ eingegrenzt)
+let searchTimer;
+const norm = (s) => s.toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "").replace(/[^a-z0-9]/g, "");
+$("#search").addEventListener("input", (e) => {
+  const q = e.target.value.trim();
+  clearTimeout(searchTimer);
+  if (!q) { $("#results").innerHTML = ""; $("#lists").classList.remove("hidden"); return; }
+  $("#lists").classList.add("hidden");
+  const local = STATIONS.filter(s => norm(s.n).includes(norm(q)));
+  showResults(local, q.length >= 3 ? "Suche bei ÖBB …" : "");
+  if (q.length < 3) return;
+  searchTimer = setTimeout(async () => {
+    try {
+      window.SLs = { showSuggestion() {} };
+      const url = BASE + "ajax-getstop.exe/dn?REQ0JourneyStopsS0A=1&REQ0JourneyStopsB=25&js=true&S=" + encodeURIComponent(q);
+      await loadScript(url, "__none__");
+      if ($("#search").value.trim() !== q) return;
+      const found = (window.SLs.sls?.suggestions || [])
+        .filter(x => x.type === "1")
+        .filter(x => { const X = x.xcoord / 1e6, Y = x.ycoord / 1e6; return X > 14.4 && X < 17.2 && Y > 47.4 && Y < 49.1; })
+        .map(x => ({ n: unescapeHtml(x.value), id: String(+x.extId) }));
+      const seen = new Set(local.map(s => s.id));
+      showResults(local.concat(found.filter(f => !seen.has(f.id) && seen.add(f.id))), "");
+    } catch (err) {
+      showResults(local, "Online-Suche nicht möglich: " + err.message);
+    }
+  }, 300);
+});
+
+function showResults(list, hint) {
+  $("#results").innerHTML =
+    (list.length ? `<ul class="list">${list.map(s => stationButton(s)).join("")}</ul>` : "") +
+    (hint ? `<div class="hint">${esc(hint)}</div>` : (list.length ? "" : `<div class="hint">Kein Bahnhof in Wien/NÖ gefunden.</div>`));
+}
+
+document.addEventListener("click", (e) => {
+  const b = e.target.closest("button[data-id]");
+  if (b) openStation({ id: b.dataset.id, n: b.dataset.name });
+});
+
+// ---------- Tafel ----------
+let current = null, refreshTimer = null;
+let filter = store.get("filter", "train");
+
+function openStation(st, push = true) {
+  current = st;
+  const rec = [st].concat(recent().filter(r => r.id !== st.id)).slice(0, 6);
+  store.set("recent", rec);
+  if (push) history.pushState({ st }, "", "?id=" + encodeURIComponent(st.id) + "&n=" + encodeURIComponent(st.n));
+  $("#picker").classList.add("hidden");
+  $("#board-wrap").classList.remove("hidden");
+  $("#back").classList.remove("hidden");
+  $("#fav").classList.remove("hidden");
+  $("#title").textContent = st.n;
+  document.title = st.n + " – Abfahrt";
+  $("#scotty").href = BASE + "stboard.exe/dn?input=" + encodeURIComponent(st.id) + "&boardType=dep&start=yes";
+  updateFavIcon();
+  $("#rows").innerHTML = "";
+  showMsg("Lade Abfahrten …");
+  window.scrollTo(0, 0);
+  load();
+}
+
+function showPicker() {
+  current = null;
+  clearTimeout(refreshTimer);
+  $("#board-wrap").classList.add("hidden");
+  $("#picker").classList.remove("hidden");
+  $("#back").classList.add("hidden");
+  $("#fav").classList.add("hidden");
+  $("#title").textContent = "Bahnhof wählen";
+  document.title = "Abfahrt";
+  $("#search").value = "";
+  $("#results").innerHTML = "";
+  $("#lists").classList.remove("hidden");
+  renderLists();
+}
+
+$("#back").addEventListener("click", () => {
+  if (history.state && history.state.st) history.back();
+  else { history.replaceState(null, "", location.pathname); showPicker(); }
+});
+window.addEventListener("popstate", (e) => {
+  if (e.state && e.state.st) openStation(e.state.st, false); else showPicker();
+});
+
+function updateFavIcon() {
+  const on = favorites().some(f => f.id === current?.id);
+  $("#favpath").setAttribute("fill", on ? "#ffd200" : "none");
+  $("#fav").style.color = on ? "#ffd200" : "";
+}
+$("#fav").addEventListener("click", () => {
+  let favs = favorites();
+  if (favs.some(f => f.id === current.id)) favs = favs.filter(f => f.id !== current.id);
+  else favs.push({ id: current.id, n: current.n });
+  store.set("favs", favs);
+  updateFavIcon();
+});
+
+document.querySelectorAll(".chip[data-filter]").forEach(c => {
+  c.classList.toggle("on", c.dataset.filter === filter);
+  c.addEventListener("click", () => {
+    filter = c.dataset.filter; store.set("filter", filter);
+    document.querySelectorAll(".chip[data-filter]").forEach(x => x.classList.toggle("on", x === c));
+    $("#rows").innerHTML = ""; showMsg("Lade Abfahrten …"); load();
+  });
+});
+
+function showMsg(t, isErr) {
+  const m = $("#msg"); m.textContent = t; m.classList.toggle("err", !!isErr); m.classList.toggle("hidden", !t);
+}
+
+function badgeClass(pr) {
+  if (/^(RJX?|EC|IC|ICE|NJ|EN|D|WB)\s?\d/.test(pr)) return "fv";
+  if (/^S\s?\d/.test(pr)) return "s";
+  if (/^(CJX|REX|R)\s?\d/.test(pr)) return "r";
+  return "u";
+}
+
+async function load() {
+  clearTimeout(refreshTimer);
+  const st = current;
+  if (!st) return;
+  const url = BASE + "stboard.exe/dn?L=vs_scotty.vs_liveticker&evaId=" + encodeURIComponent(st.id) +
+    "&boardType=dep&productsFilter=" + FILTERS[filter] +
+    "&dirInput=&tickerID=dep&start=yes&eqstops=true&showJourneys=40&additionalTime=0&outputMode=tickerDataOnly";
+  try {
+    const data = await loadScript(url, "journeysObj");
+    if (current !== st) return;
+    if (!data) throw new Error("Unerwartete Antwort");
+    render(data);
+    $("#updated").textContent = "Stand " + new Date().toLocaleTimeString("de-AT", { hour: "2-digit", minute: "2-digit", second: "2-digit" });
+  } catch (err) {
+    if (current !== st) return;
+    if (!$("#rows").children.length) showMsg(err.message + " – neuer Versuch in 30 s", true);
+    $("#updated").textContent = "Offline";
+  }
+  if (current === st) refreshTimer = setTimeout(load, REFRESH_MS);
+}
+
+function render(data) {
+  const rows = (data.journey || []).map(j => {
+    const rt = j.rt || null;
+    const status = rt && rt.status ? unescapeHtml(rt.status) : "";
+    const cancelled = /ausf|fällt|entf/i.test(status);
+    const delay = rt && rt.dlm ? parseInt(rt.dlm, 10) : 0;
+    let rtHtml = "";
+    if (cancelled) rtHtml = `<span class="rt cancel">entfällt</span>`;
+    else if (rt && delay > 0) rtHtml = `<span class="rt late">${esc(rt.dlt || "")}</span>`;
+    else if (rt) rtHtml = `<span class="rt ontime">pünktlich</span>`;
+    const dest = unescapeHtml(j.st).replace(/<[^>]+>/g, "");
+    const last = unescapeHtml(j.lastStop || "");
+    const pr = unescapeHtml(j.pr || "").replace(/\s+/g, " ").trim().replace(/^BusSV\s?/, "SEV ");
+    const track = unescapeHtml(j.tr || "");
+    let note = "";
+    if (cancelled) note = `<span class="note cancel">Zug fällt aus</span>`;
+    else if (delay >= 5) note = `<span class="note late">ca. +${delay} min</span>`;
+    else if (status && !/^neu$/i.test(status)) note = `<span class="note late">${esc(status)}</span>`;
+    else if (/^neu$/i.test(status)) note = `<span class="note late">Zusatzfahrt</span>`;
+    if (j.trChg && !cancelled) note += `<span class="note late">Gleisänderung</span>`;
+    return `<tr class="${cancelled ? "cancelled" : ""}">
+      <td class="time">${esc(j.ti)}${rtHtml}</td>
+      <td class="train"><span class="badge ${badgeClass(pr)}">${esc(pr)}</span></td>
+      <td class="dest"><span class="name">${esc(dest)}</span>${last && last !== dest && !last.startsWith(dest) ? `<span class="via">→ ${esc(last)}</span>` : ""}${note}</td>
+      <td class="track ${j.trChg ? "changed" : ""}">${esc(track)}</td>
+    </tr>`;
+  });
+  $("#rows").innerHTML = rows.join("");
+  showMsg(rows.length ? "" : "Derzeit keine Abfahrten.");
+}
+
+// Aktualisieren, wenn die App wieder in den Vordergrund kommt
+document.addEventListener("visibilitychange", () => { if (!document.hidden && current) load(); });
+
+// ---------- Start ----------
+const params = new URLSearchParams(location.search);
+if (params.get("id")) {
+  const id = params.get("id");
+  const known = STATIONS.find(s => s.id === id) || favorites().find(s => s.id === id) || recent().find(s => s.id === id);
+  const st = { id, n: params.get("n") || known?.n || "Bahnhof" };
+  history.replaceState({ st }, "", location.href);
+  openStation(st, false);
+} else {
+  renderLists();
+}
+
+if ("serviceWorker" in navigator) navigator.serviceWorker.register("sw.js").catch(() => {});
+</script>
+</body>
+</html>
