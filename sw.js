@@ -1,5 +1,5 @@
 // Speichert nur die App-Hülle; Abfahrtsdaten kommen immer live von ÖBB.
-const CACHE = "abfahrt-v2";
+const CACHE = "abfahrt-v3";
 const SHELL = ["./", "index.html", "stations.js", "manifest.json", "icon.svg", "icon-192.png", "icon-512.png"];
 
 self.addEventListener("install", (e) => {

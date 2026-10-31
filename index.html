@@ -96,6 +96,21 @@
   td { padding: 11px 8px; vertical-align: top; font-size: 17px; }
   td.time { width: 64px; font-weight: 700; font-variant-numeric: tabular-nums; padding-left: 16px; }
   td.time .rt { display: block; font-size: 14px; font-weight: 600; }
+  td.time .t { display: inline-flex; align-items: center; gap: 6px; }
+
+  /* Statuspunkt wie auf der Bahnhofsanzeige: grün = pünktlich, gelb = verspätet, rot = fällt aus */
+  .dot { width: 9px; height: 9px; border-radius: 50%; flex: none; }
+  .dot.ok { background: var(--green); box-shadow: 0 0 6px var(--green); }
+  .dot.late { background: var(--yellow); box-shadow: 0 0 6px var(--yellow); }
+  .dot.cancel { background: var(--red); }
+  .dot.none { background: transparent; border: 1px solid var(--line); }
+  .dot.blink { animation: blink 1s steps(1, end) infinite; }
+  @keyframes blink { 50% { opacity: .15; } }
+  @media (prefers-reduced-motion: reduce) { .dot.blink { animation: none; } }
+  #updated .live { display: inline-block; width: 7px; height: 7px; border-radius: 50%; background: var(--green); margin-right: 6px; vertical-align: middle; }
+  #updated.stale .live { background: var(--red); }
+  .legend { display: flex; gap: 14px; flex-wrap: wrap; padding: 0 16px 8px; color: var(--muted); font-size: 12px; }
+  .legend span { display: inline-flex; align-items: center; gap: 5px; }
   .ontime { color: var(--green); }
   .late { color: var(--yellow); }
   .cancel { color: var(--red); }
@@ -156,6 +171,12 @@
     <button class="chip" data-filter="all">Alle Verkehrsmittel</button>
     <span class="spacer"></span>
     <span id="updated"></span>
+  </div>
+  <div class="legend">
+    <span><i class="dot ok"></i>pünktlich</span>
+    <span><i class="dot late"></i>verspätet</span>
+    <span><i class="dot cancel"></i>fällt aus</span>
+    <span><i class="dot ok blink"></i>fährt gleich ab</span>
   </div>
   <table>
     <thead><tr><th style="padding-left:16px">Zeit</th><th>Zug</th><th>Nach</th><th style="text-align:right;padding-right:16px">Steig</th></tr></thead>
@@ -286,6 +307,7 @@ function openStation(st, push = true) {
   document.title = st.n + " – Abfahrt";
   $("#scotty").href = BASE + "stboard.exe/dn?input=" + encodeURIComponent(st.id) + "&boardType=dep&start=yes";
   updateFavIcon();
+  lastUpdate = 0; showUpdated();
   $("#rows").innerHTML = "";
   showMsg("Lade Abfahrten …");
   window.scrollTo(0, 0);
@@ -360,13 +382,32 @@ async function load() {
     if (current !== st) return;
     if (!data) throw new Error("Unerwartete Antwort");
     render(data);
-    $("#updated").textContent = "Stand " + new Date().toLocaleTimeString("de-AT", { hour: "2-digit", minute: "2-digit", second: "2-digit" });
+    lastUpdate = Date.now();
+    showUpdated();
   } catch (err) {
     if (current !== st) return;
     if (!$("#rows").children.length) showMsg(err.message + " – neuer Versuch in 30 s", true);
-    $("#updated").textContent = "Offline";
+    showUpdated();
   }
   if (current === st) refreshTimer = setTimeout(load, REFRESH_MS);
+}
+
+// „aktualisiert vor x s“ – wird rot, wenn länger als 90 s keine neuen Daten kamen
+let lastUpdate = 0;
+function showUpdated() {
+  const el = $("#updated");
+  if (!current || !lastUpdate) { el.innerHTML = ""; return; }
+  const s = Math.round((Date.now() - lastUpdate) / 1000);
+  el.classList.toggle("stale", s > 90);
+  el.innerHTML = `<i class="live"></i>` + (s > 90 ? "keine Verbindung" : s < 5 ? "gerade aktualisiert" : `vor ${s} s aktualisiert`);
+}
+setInterval(showUpdated, 1000);
+
+function minutesUntil(da, ti) {
+  const [d, m, y] = (da || "").split(".").map(Number);
+  const [h, min] = (ti || "").split(":").map(Number);
+  if (!y || isNaN(h)) return Infinity;
+  return (new Date(y, m - 1, d, h, min) - Date.now()) / 60000;
 }
 
 function render(data) {
@@ -378,7 +419,6 @@ function render(data) {
     let rtHtml = "";
     if (cancelled) rtHtml = `<span class="rt cancel">entfällt</span>`;
     else if (rt && delay > 0) rtHtml = `<span class="rt late">${esc(rt.dlt || "")}</span>`;
-    else if (rt) rtHtml = `<span class="rt ontime">pünktlich</span>`;
     const dest = unescapeHtml(j.st).replace(/<[^>]+>/g, "");
     const last = unescapeHtml(j.lastStop || "");
     const pr = unescapeHtml(j.pr || "").replace(/\s+/g, " ").trim().replace(/^BusSV\s?/, "SEV ");
@@ -389,8 +429,15 @@ function render(data) {
     else if (status && !/^neu$/i.test(status)) note = `<span class="note late">${esc(status)}</span>`;
     else if (/^neu$/i.test(status)) note = `<span class="note late">Zusatzfahrt</span>`;
     if (j.trChg && !cancelled) note += `<span class="note late">Gleisänderung</span>`;
+    // Punkt: Farbe nach Echtzeitstatus, blinkt in den letzten 2 Minuten vor der (tatsächlichen) Abfahrt
+    // (ÖBB liefert Echtzeitdaten nur bei Abweichungen – ohne Eintrag gilt der Zug als planmäßig)
+    let dot = "ok";
+    if (cancelled) dot = "cancel";
+    else if (delay > 0) dot = "late";
+    const mins = minutesUntil(j.da, (rt && rt.dlt) || j.ti);
+    const blink = !cancelled && mins <= 2 && mins >= -1;
     return `<tr class="${cancelled ? "cancelled" : ""}">
-      <td class="time">${esc(j.ti)}${rtHtml}</td>
+      <td class="time"><span class="t"><i class="dot ${dot}${blink ? " blink" : ""}"></i>${esc(j.ti)}</span>${rtHtml}</td>
       <td class="train"><span class="badge ${badgeClass(pr)}">${esc(pr)}</span></td>
       <td class="dest"><span class="name">${esc(dest)}</span>${last && last !== dest && !last.startsWith(dest) ? `<span class="via">→ ${esc(last)}</span>` : ""}${note}</td>
       <td class="track ${j.trChg ? "changed" : ""}">${esc(track)}</td>
