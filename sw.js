@@ -1,6 +1,6 @@
 // Speichert nur die App-Hülle; Abfahrtsdaten kommen immer live von ÖBB.
-const CACHE = "abfahrt-v4";
-const SHELL = ["./", "index.html", "stations.js", "manifest.json", "icon.svg", "icon-192.png", "icon-512.png"];
+const CACHE = "abfahrt-v5";
+const SHELL = ["./", "index.html", "stations.js", "manifest.json", "icon.svg", "icon-192.png", "icon-512.png", "apple-touch-icon.png"];
 
 self.addEventListener("install", (e) => {
   e.waitUntil(caches.open(CACHE).then((c) => c.addAll(SHELL)).then(() => self.skipWaiting()));
