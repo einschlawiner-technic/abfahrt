@@ -105,6 +105,8 @@
   }
   .chip.on { background: var(--yellow); color: #000; border-color: var(--yellow); font-weight: 600; }
   .toolbar .spacer { flex: 1; }
+  .chip.maplink { display: inline-flex; align-items: center; gap: 6px; text-decoration: none; color: var(--text); }
+  .chip.maplink svg { width: 16px; height: 16px; }
   #updated { color: var(--muted); font-size: 13px; }
 
   table { width: 100%; border-collapse: collapse; }
@@ -207,6 +209,10 @@
   <div class="toolbar">
     <button class="chip on" data-filter="train">Nur Züge</button>
     <button class="chip" data-filter="all">Alle Verkehrsmittel</button>
+    <a class="chip maplink" href="https://fahrplan.oebb.at/webapp/" target="_blank" rel="noopener" title="Fahrzeuge live auf der ÖBB-Karte (dort Menü → Karte)">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 4 3 6v14l6-2 6 2 6-2V4l-6 2-6-2z"/><path d="M9 4v14M15 6v14"/></svg>
+      Livekarte
+    </a>
     <span class="spacer"></span>
     <span id="updated"></span>
   </div>
