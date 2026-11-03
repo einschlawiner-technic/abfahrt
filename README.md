@@ -1,10 +1,11 @@
 # Abfahrt Wien & NÖ
 
-**Version 1.0** · November 2026
+**Version 1.0.1** · November 2026
 
 Kleine Web-App (PWA): Bahnhof oder Haltestelle in Wien oder Niederösterreich wählen und die Live-Abfahrten wie auf der Bahnhofsanzeige sehen.
 
 **Adresse:** https://einschlawiner-technic.github.io/abfahrt/
+**Testversion (Beta):** https://einschlawiner-technic.github.io/abfahrt/beta/
 
 ---
 
@@ -19,8 +20,9 @@ Kleine Web-App (PWA): Bahnhof oder Haltestelle in Wien oder Niederösterreich w�
 7. [Anzeige-Logik (Farben, Punkte, Hinweise)](#anzeige-logik)
 8. [Offline und Updates (Service Worker)](#offline-und-updates)
 9. [Änderungen machen und veröffentlichen](#änderungen-machen-und-veröffentlichen)
-10. [Grenzen und Risiken](#grenzen-und-risiken)
-11. [Versionen](#versionen)
+10. [Beta-Version zum Testen](#beta-version-zum-testen)
+11. [Grenzen und Risiken](#grenzen-und-risiken)
+12. [Versionen](#versionen)
 
 ---
 
@@ -52,7 +54,7 @@ Shortcut für einen einzelnen Bahnhof: Tafel des Bahnhofs im Browser öffnen und
 |---|---|
 | **Sprachen** | HTML, CSS und JavaScript – ohne Framework, ohne Build-Schritt |
 | **App-Typ** | PWA (Progressive Web App): eine Webseite, die sich wie eine App installieren lässt |
-| **Hosting** | GitHub Pages (kostenlos, HTTPS) direkt aus dem Branch `main` |
+| **Hosting** | GitHub Pages (kostenlos, HTTPS), veröffentlicht per GitHub Actions aus den Branches `main` und `beta` |
 | **Server** | keiner – jedes Gerät holt die Daten direkt bei der ÖBB |
 | **Daten** | ÖBB-Fahrplanauskunft „Scotty“ (HAFAS-System) |
 | **Speicher** | `localStorage` im Browser für Favoriten, Verlauf und Filter |
@@ -241,6 +243,40 @@ Kleine Änderungen gehen auch direkt auf github.com: Datei öffnen → Stift-Sym
 
 **Icons neu erzeugen:** `icon.svg` ist die Vorlage. Die PNG-Dateien wurden mit Python/Pillow daraus nachgezeichnet; alternativ jedes Grafikprogramm verwenden und als 512 × 512, 192 × 192 und 180 × 180 (`apple-touch-icon.png`) exportieren. Das Motiv sollte im inneren Kreis (80 % der Breite) bleiben, weil Android Icons rund zuschneiden kann.
 
+## Beta-Version zum Testen
+
+Neue Funktionen kommen zuerst in eine **Testversion**, die neben der Produktivversion läuft.
+
+| | Produktiv | Beta |
+|---|---|---|
+| Branch | `main` | `beta` |
+| Adresse | `…/abfahrt/` | `…/abfahrt/beta/` |
+| App-Name | Abfahrt | Abfahrt Beta |
+| Icon | rot | orange mit „BETA“ |
+| Kennzeichen in der App | – | oranges „BETA“ oben, orange Linie |
+| Versionsnummer | z. B. `1.0.1` | z. B. `1.1-beta.1` |
+
+Beide lassen sich gleichzeitig auf demselben Handy installieren. Favoriten und „Zuletzt“ sind getrennt (die Beta speichert mit dem Präfix `beta:`), ebenso die Zwischenspeicher.
+
+**Wie das technisch funktioniert:** Es ist derselbe Code. `index.html` und `sw.js` erkennen am Pfad (`/beta/`), ob sie als Beta laufen, und wählen danach Name, `manifest-beta.json`, Beta-Icons, Speicher-Präfix und Cache-Namen. Der Workflow `.github/workflows/pages.yml` baut bei jedem Push auf `main` oder `beta` die Seite neu: `main` ins Hauptverzeichnis, `beta` in den Unterordner `beta/`. (In den Repo-Einstellungen steht dafür *Settings → Pages → Source: GitHub Actions*.)
+
+**Ablauf:**
+
+1. Änderung im Branch `beta` machen, `VERSION` in `sw.js` auf z. B. `1.1-beta.2` setzen, committen, pushen.
+2. Am Handy in „Abfahrt Beta“ testen (der Update-Hinweis erscheint dort).
+3. Passt alles → Beta wird produktiv:
+   ```bash
+   git switch main
+   git merge beta
+   # VERSION in sw.js auf die fertige Nummer setzen, z. B. "1.1", Eintrag unter „Versionen“ ergänzen
+   git commit -am "Version 1.1"
+   git tag v1.1
+   git push origin main v1.1
+   ```
+4. Danach `beta` wieder auf den Stand von `main` bringen (`git switch beta && git merge main && git push`) – bereit für die nächste Testrunde.
+
+Korrekturen an der Produktivversion, die nicht über die Beta laufen, direkt in `main` machen und anschließend `main` in `beta` übernehmen.
+
 ## Grenzen und Risiken
 
 - **Inoffizielle Schnittstelle:** Die ÖBB bieten diese Adressen nicht offiziell für fremde Apps an. Ändern sie etwas, zeigt die App „Keine Verbindung zu ÖBB“ oder leere Tafeln, bis der Code angepasst ist. Die Daten dienen nur der persönlichen Information.
@@ -249,6 +285,12 @@ Kleine Änderungen gehen auch direkt auf github.com: Datei öffnen → Stift-Sym
 - **Öffentlich:** Das Repository und die Seite sind öffentlich einsehbar (nötig für kostenloses GitHub Pages). Es sind keine persönlichen Daten darin.
 
 ## Versionen
+
+### 1.0.1 – November 2026
+
+- Grundlage für die Beta-Version: Produktiv- und Testversion laufen getrennt nebeneinander (eigene Daten, eigener Name, eigenes Icon)
+- Veröffentlichung per GitHub Actions
+- Korrektur: Update-Hinweis erscheint nicht mehr fälschlich bei der Erstinstallation
 
 ### 1.0 – November 2026
 
