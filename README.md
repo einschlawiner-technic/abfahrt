@@ -1,6 +1,6 @@
 # Abfahrt Wien & NÖ
 
-**Version 1.0.3** · November 2026
+**Version 1.0.4** · November 2026
 
 Kleine Web-App (PWA): Bahnhof oder Haltestelle in Wien oder Niederösterreich wählen und die Live-Abfahrten wie auf der Bahnhofsanzeige sehen.
 
@@ -288,11 +288,14 @@ Korrekturen an der Produktivversion, die nicht über die Beta laufen, direkt in 
 
 ### 1.1-beta.5 – Testversion
 
-- Im Hintergrund keine Abfragen mehr; beim Zurückkehren sofortige Aktualisierung
-- Einzelne Verbindungsaussetzer werden nach 5 s still wiederholt; eine Fehlermeldung erscheint erst nach zwei Fehlversuchen in Folge
 - Knopf „Livekarte“ auf der Abfahrtstafel öffnet direkt die ÖBB-Livekarte, zentriert auf die gewählte Station (Link-Parameter `showLivemap=true&X=…&Y=…`; die Zoomstufe legt die ÖBB-Seite fest)
 - Stationsliste mit Koordinaten
-- enthält die Korrekturen aus 1.0.3
+- enthält die Änderungen aus 1.0.4
+
+### 1.0.4 – November 2026
+
+- Im Hintergrund keine Abfragen mehr; beim Zurückkehren sofortige Aktualisierung
+- Einzelne Verbindungsaussetzer werden nach 5 s still wiederholt; eine Fehlermeldung erscheint erst nach zwei Fehlversuchen in Folge
 
 ### 1.0.3 – November 2026
 
