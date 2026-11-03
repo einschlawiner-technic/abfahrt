@@ -8,7 +8,9 @@
 <script>
   // Die Beta-Version läuft unter …/beta/ – mit eigenem Namen, Icon, Manifest und eigenen Daten,
   // damit sich beide Versionen nebeneinander installieren lassen.
-  const BETA = location.pathname.includes("/beta/");
+  // „…/abfahrt/beta“ ohne Schrägstrich auf „…/abfahrt/beta/“ umleiten, sonst passen die relativen Pfade nicht
+  if (/\/beta$/.test(location.pathname)) location.replace(location.pathname + "/" + location.search + location.hash);
+  const BETA = /\/beta(\/|$)/.test(location.pathname);
   const APP_NAME = BETA ? "Abfahrt Beta" : "Abfahrt";
   const SFX = BETA ? "-beta" : "";
   document.title = APP_NAME;

@@ -1,11 +1,12 @@
 // Speichert die App-Hülle; Abfahrtsdaten kommen immer live von ÖBB.
 // Bei jeder Änderung VERSION erhöhen – dann erkennt das Handy die neue Version
 // und zeigt den Hinweis „Neue Version verfügbar“.
-const VERSION = "1.1-beta.1";
+const VERSION = "1.1-beta.2";
 
 // Dieselbe Datei läuft als Produktivversion (…/abfahrt/) und als Beta (…/abfahrt/beta/).
 // Beide bekommen eigene Cache-Namen und kommen sich nicht in die Quere.
-const BETA = self.location.pathname.includes("/beta/");
+const isBetaPath = (p) => /\/beta(\/|$)/.test(p);   // auch „…/beta“ ohne Schrägstrich
+const BETA = isBetaPath(self.location.pathname);
 const PREFIX = BETA ? "abfahrt-beta-v" : "abfahrt-v";
 const CACHE = PREFIX + VERSION;
 const SHELL = [
@@ -38,7 +39,7 @@ self.addEventListener("fetch", (e) => {
   const url = new URL(e.request.url);
   if (url.origin !== location.origin || e.request.method !== "GET") return;
   // Die Produktivversion lässt alles unter /beta/ in Ruhe – das gehört der Beta
-  if (!BETA && url.pathname.includes("/beta/")) return;
+  if (!BETA && isBetaPath(url.pathname)) return;
   // Cache zuerst: die App bleibt auf ihrer Version, bis aktualisiert wird; offline klappt der Start.
   // Seitenaufrufe mit ?id=… bekommen immer die gespeicherte index.html.
   const key = e.request.mode === "navigate" ? "index.html" : e.request;
