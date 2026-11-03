@@ -1,7 +1,7 @@
 # Veröffentlicht die App auf GitHub Pages – jedes Repository seinen eigenen Branch main:
 #   einschlawiner-technic/abfahrt              -> https://einschlawiner-technic.github.io/abfahrt/               (Produktiv)
-#   einschlawiner-technic/abfahrt-beta         -> https://einschlawiner-technic.github.io/abfahrt-beta/          (Beta)
-#   einschlawiner-technic/abfahrt-experimental -> https://einschlawiner-technic.github.io/abfahrt-experimental/  (Experimental)
+#   einschlawiner-technic/beta-abfahrt         -> https://einschlawiner-technic.github.io/beta-abfahrt/          (Beta)
+#   einschlawiner-technic/experimental-abfahrt -> https://einschlawiner-technic.github.io/experimental-abfahrt/  (Experimental)
 # Der Code liegt in einschlawiner-technic/abfahrt (Branches main, beta, experimental);
 # beta und experimental werden zusätzlich als main in die beiden anderen Repositorys geschoben.
 name: Pages
@@ -45,9 +45,9 @@ jobs:
           <!doctype html>
           <meta charset="utf-8">
           <title>Umgezogen</title>
-          <meta http-equiv="refresh" content="0; url=/abfahrt-$ch/">
-          <script>location.replace("/abfahrt-$ch/" + location.search + location.hash);</script>
-          <p>Neue Adresse: <a href="/abfahrt-$ch/">/abfahrt-$ch/</a></p>
+          <meta http-equiv="refresh" content="0; url=/$ch-abfahrt/">
+          <script>location.replace("/$ch-abfahrt/" + location.search + location.hash);</script>
+          <p>Neue Adresse: <a href="/$ch-abfahrt/">/$ch-abfahrt/</a></p>
           HTML
           done
 

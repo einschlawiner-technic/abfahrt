@@ -6,17 +6,17 @@
 <meta name="theme-color" content="#0a1a33">
 <title>Abfahrt</title>
 <script>
-  // Drei Kanäle aus demselben Code: Produktiv (…/abfahrt/), Beta (…/abfahrt-beta/) und Experimental (…/abfahrt-experimental/).
+  // Drei Kanäle aus demselben Code: Produktiv (…/abfahrt/), Beta (…/beta-abfahrt/) und Experimental (…/experimental-abfahrt/).
   // Jeder hat eigenen Namen, Icon, Manifest und eigene Daten, damit sie sich nebeneinander installieren lassen.
-  // Die Adressen liegen bewusst nebeneinander statt ineinander: Android ordnet installierte Apps nach Adressbereich zu
-  // und hielt Unterordner von …/abfahrt/ sonst für die Produktiv-App.
+  // Die Adressen dürfen nicht mit „/abfahrt“ beginnen: Android ordnet installierte Apps nach dem Anfang der Adresse zu
+  // und hielt sowohl …/abfahrt/beta/ als auch …/abfahrt-beta/ für die Produktiv-App.
   const CHANNELS = {
     produktiv:    { name: "Abfahrt",              sfx: "",              key: "",      tag: "" },
     beta:         { name: "Abfahrt Beta",         sfx: "-beta",         key: "beta:", tag: "BETA" },
     experimental: { name: "Abfahrt Experimental", sfx: "-experimental", key: "exp:",  tag: "EXP" },
   };
-  const CHANNEL = /\/abfahrt-experimental\//.test(location.pathname) ? "experimental"
-                : /\/abfahrt-beta\//.test(location.pathname) ? "beta" : "produktiv";
+  const CHANNEL = /\/experimental-abfahrt\//.test(location.pathname) ? "experimental"
+                : /\/beta-abfahrt\//.test(location.pathname) ? "beta" : "produktiv";
   const APP_NAME = CHANNELS[CHANNEL].name;
   const SFX = CHANNELS[CHANNEL].sfx;
   document.title = APP_NAME;

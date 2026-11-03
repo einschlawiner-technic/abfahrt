@@ -2,18 +2,18 @@
 // Bei jeder Änderung die Versionsnummer des betroffenen Kanals erhöhen – dann erkennt das Handy
 // die neue Version und zeigt den Hinweis „Neue Version verfügbar“.
 const VERSIONS = {
-  produktiv: "1.0.6",
-  beta: "1.0.6",
-  experimental: "1.1-exp.2",
+  produktiv: "1.0.7",
+  beta: "1.0.7",
+  experimental: "1.1-exp.3",
 };
 
-// Dieselbe Datei läuft in drei Kanälen: Produktiv (…/abfahrt/), Beta (…/abfahrt-beta/) und Experimental (…/abfahrt-experimental/).
+// Dieselbe Datei läuft in drei Kanälen: Produktiv (…/abfahrt/), Beta (…/beta-abfahrt/) und Experimental (…/experimental-abfahrt/).
 // Jeder bekommt eigene Cache-Namen, so kommen sie sich nicht in die Quere.
 // Unter …/abfahrt/beta/ und …/abfahrt/experimental/ liegen nur noch Umleitungen auf die neuen Adressen –
 // die lässt die Produktivversion in Ruhe.
 const isOldChannelPath = (p) => /\/abfahrt\/(beta|experimental)(\/|$)/.test(p);
-const CHANNEL = /\/abfahrt-experimental\//.test(self.location.pathname) ? "experimental"
-              : /\/abfahrt-beta\//.test(self.location.pathname) ? "beta" : "produktiv";
+const CHANNEL = /\/experimental-abfahrt\//.test(self.location.pathname) ? "experimental"
+              : /\/beta-abfahrt\//.test(self.location.pathname) ? "beta" : "produktiv";
 const VERSION = VERSIONS[CHANNEL];
 const PREFIX = { produktiv: "abfahrt-v", beta: "abfahrt-beta-v", experimental: "abfahrt-exp-v" }[CHANNEL];
 const CACHE = PREFIX + VERSION;

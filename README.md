@@ -1,12 +1,12 @@
 # Abfahrt Wien & NÖ
 
-**Version 1.0.6** · November 2026
+**Version 1.0.7** · November 2026
 
 Kleine Web-App (PWA): Bahnhof oder Haltestelle in Wien oder Niederösterreich wählen und die Live-Abfahrten wie auf der Bahnhofsanzeige sehen.
 
 **Adresse:** https://einschlawiner-technic.github.io/abfahrt/  
-**Testversion (Beta):** https://einschlawiner-technic.github.io/abfahrt-beta/  
-**Experimentierversion:** https://einschlawiner-technic.github.io/abfahrt-experimental/
+**Testversion (Beta):** https://einschlawiner-technic.github.io/beta-abfahrt/  
+**Experimentierversion:** https://einschlawiner-technic.github.io/experimental-abfahrt/
 
 ---
 
@@ -55,7 +55,7 @@ Shortcut für einen einzelnen Bahnhof: Tafel des Bahnhofs im Browser öffnen und
 |---|---|
 | **Sprachen** | HTML, CSS und JavaScript – ohne Framework, ohne Build-Schritt |
 | **App-Typ** | PWA (Progressive Web App): eine Webseite, die sich wie eine App installieren lässt |
-| **Hosting** | GitHub Pages (kostenlos, HTTPS), veröffentlicht per GitHub Actions; ein Repository je Kanal (`abfahrt`, `abfahrt-beta`, `abfahrt-experimental`) |
+| **Hosting** | GitHub Pages (kostenlos, HTTPS), veröffentlicht per GitHub Actions; ein Repository je Kanal (`abfahrt`, `beta-abfahrt`, `experimental-abfahrt`) |
 | **Server** | keiner – jedes Gerät holt die Daten direkt bei der ÖBB |
 | **Daten** | ÖBB-Fahrplanauskunft „Scotty“ (HAFAS-System) |
 | **Speicher** | `localStorage` im Browser für Favoriten, Verlauf und Filter |
@@ -251,22 +251,22 @@ Kleine Änderungen gehen auch direkt auf github.com: Datei öffnen → Stift-Sym
 |---|---|---|---|
 | Zweck | tägliche Nutzung | freigegebene Änderungen, letzte Probe vor Produktiv | Spielwiese; manches bleibt für immer hier |
 | Branch (im Repo `abfahrt`) | `main` | `beta` | `experimental` |
-| Veröffentlicht aus Repo | `abfahrt` | `abfahrt-beta` | `abfahrt-experimental` |
-| Adresse | `…/abfahrt/` | `…/abfahrt-beta/` | `…/abfahrt-experimental/` |
+| Veröffentlicht aus Repo | `abfahrt` | `beta-abfahrt` | `experimental-abfahrt` |
+| Adresse | `…/abfahrt/` | `…/beta-abfahrt/` | `…/experimental-abfahrt/` |
 | App-Name | Abfahrt | Abfahrt Beta | Abfahrt Experimental |
 | Icon / Kennzeichen | rot | orange, „BETA“ | lila, „EXP“ |
 | Speicher-Präfix | – | `beta:` | `exp:` |
-| Versionsnummer | z. B. `1.0.6` | z. B. `1.1-beta.1` | z. B. `1.1-exp.2` |
+| Versionsnummer | z. B. `1.0.7` | z. B. `1.1-beta.1` | z. B. `1.1-exp.3` |
 
 Alle drei lassen sich gleichzeitig installieren; Favoriten, „Zuletzt“ und Zwischenspeicher sind je Kanal getrennt.
 
-**Warum drei Adressen nebeneinander?** Android ordnet installierte Web-Apps nach ihrem Adressbereich zu. Lägen Beta und Experimental *unter* `…/abfahrt/`, hielte Chrome sie für die Produktiv-App („bereits installiert“) und würde diese beim Installieren überschreiben. Deshalb hat jeder Kanal ein eigenes Repository und damit eine eigene Adresse. Unter den früheren Adressen `…/abfahrt/beta/` und `…/abfahrt/experimental/` liegt nur noch eine Umleitung.
+**Warum heißen die Adressen so?** Android ordnet installierte Web-Apps nach dem **Anfang** ihrer Adresse zu. Die Produktiv-App gehört zu `…/abfahrt`; jede Adresse, die ebenfalls mit `/abfahrt` beginnt – ob `…/abfahrt/beta/` oder `…/abfahrt-beta/` –, hielt Chrome für die Produktiv-App („bereits installiert“, „App konnte nicht geöffnet werden“) und überschrieb sie beim Installieren. Deshalb hat jeder Kanal ein eigenes Repository, dessen Name **nicht** mit „abfahrt“ beginnt. Unter den früheren Adressen `…/abfahrt/beta/` und `…/abfahrt/experimental/` liegt nur noch eine Umleitung.
 
-**Ein Code, drei Kanäle.** Der gesamte Code liegt im Repository `abfahrt` mit den Branches `main`, `beta` und `experimental`. `index.html` und `sw.js` erkennen am Pfad (`/abfahrt-beta/`, `/abfahrt-experimental/`), in welchem Kanal sie laufen (`CHANNEL`), und wählen danach Name, Manifest, Icons, Speicher-Präfix und Cache-Namen. Die Versionsnummern stehen für alle Kanäle gemeinsam in `VERSIONS` in `sw.js`. Veröffentlicht wird so:
+**Ein Code, drei Kanäle.** Der gesamte Code liegt im Repository `abfahrt` mit den Branches `main`, `beta` und `experimental`. `index.html` und `sw.js` erkennen am Pfad (`/beta-abfahrt/`, `/experimental-abfahrt/`), in welchem Kanal sie laufen (`CHANNEL`), und wählen danach Name, Manifest, Icons, Speicher-Präfix und Cache-Namen. Die Versionsnummern stehen für alle Kanäle gemeinsam in `VERSIONS` in `sw.js`. Veröffentlicht wird so:
 
 - `main` → per Push ins Repo `abfahrt` (Workflow `.github/workflows/pages.yml` baut die Seite)
-- `beta` → zusätzlich als `main` ins Repo `abfahrt-beta` geschoben
-- `experimental` → zusätzlich als `main` ins Repo `abfahrt-experimental` geschoben
+- `beta` → zusätzlich als `main` ins Repo `beta-abfahrt` geschoben
+- `experimental` → zusätzlich als `main` ins Repo `experimental-abfahrt` geschoben
 
 In jedem der drei Repos steht *Settings → Pages → Source: GitHub Actions*. Die Git-Fernziele heißen lokal `origin`, `beta-site` und `experimental-site`.
 
@@ -284,7 +284,7 @@ Ist eine Funktion überall angekommen, kann ihr Schalter entfallen.
 
 **Ablauf.** Die Branches liegen immer hintereinander: `experimental` ist am weitesten, `beta` folgt, `main` zuletzt. Übernommen wird immer der ganze Stand (Fast-Forward), nie einzelne Änderungen – darum gibt es keine Konflikte.
 
-1. **Neue Idee:** im Branch `experimental` bauen, mit Schalter `["experimental"]`, Experimental-Version erhöhen (z. B. `1.1-exp.3`), dann
+1. **Neue Idee:** im Branch `experimental` bauen, mit Schalter `["experimental"]`, Experimental-Version erhöhen (z. B. `1.1-exp.4`), dann
    ```bash
    git push origin experimental && git push experimental-site experimental:main
    ```
@@ -315,9 +315,13 @@ Wichtig: Änderungen ohne Schalter (Korrekturen, Umbauten) wirken in jedem Kanal
 
 ## Versionen
 
-### 1.1-exp.2 – Experimental
+### 1.1-exp.3 – Experimental
 
 - Knopf „Livekarte“ (Schalter `livemap`) öffnet direkt die ÖBB-Livekarte, zentriert auf die gewählte Station (Link-Parameter `showLivemap=true&X=…&Y=…`; Zoomstufe und Verkehrsmittel legt die ÖBB-Seite fest)
+
+### 1.0.7 – November 2026 (Produktiv und Beta)
+
+- Beta und Experimental unter `…/beta-abfahrt/` und `…/experimental-abfahrt/`: Adressen, die mit `/abfahrt` beginnen, ordnete Android der Produktiv-App zu
 
 ### 1.0.6 – November 2026 (Produktiv und Beta)
 
