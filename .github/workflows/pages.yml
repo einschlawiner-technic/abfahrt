@@ -1,13 +1,14 @@
-# Veröffentlicht die App auf GitHub Pages:
-#   Branch main -> https://einschlawiner-technic.github.io/abfahrt/       (Produktivversion)
-#   Branch beta -> https://einschlawiner-technic.github.io/abfahrt/beta/  (Testversion)
-#   Branch experimental -> https://einschlawiner-technic.github.io/abfahrt/experimental/  (Spielwiese)
-# Läuft bei jedem Push auf einen der Branches und baut immer alle zusammen.
+# Veröffentlicht die App auf GitHub Pages – jedes Repository seinen eigenen Branch main:
+#   einschlawiner-technic/abfahrt              -> https://einschlawiner-technic.github.io/abfahrt/               (Produktiv)
+#   einschlawiner-technic/abfahrt-beta         -> https://einschlawiner-technic.github.io/abfahrt-beta/          (Beta)
+#   einschlawiner-technic/abfahrt-experimental -> https://einschlawiner-technic.github.io/abfahrt-experimental/  (Experimental)
+# Der Code liegt in einschlawiner-technic/abfahrt (Branches main, beta, experimental);
+# beta und experimental werden zusätzlich als main in die beiden anderen Repositorys geschoben.
 name: Pages
 
 on:
   push:
-    branches: [main, beta, experimental]
+    branches: [main]
   workflow_dispatch:
 
 permissions:
@@ -26,37 +27,29 @@ jobs:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
     steps:
-      - name: Produktivversion (main) holen
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
         with:
-          ref: main
           path: site
 
-      - name: Prüfen, welche Branches es gibt
-        id: branches
-        run: |
-          for b in beta experimental; do
-            if git ls-remote --exit-code --heads "https://github.com/${{ github.repository }}.git" "$b" >/dev/null; then
-              echo "$b=true" >> "$GITHUB_OUTPUT"
-            fi
-          done
-
-      - name: Testversion (beta) holen
-        if: steps.branches.outputs.beta == 'true'
-        uses: actions/checkout@v4
-        with:
-          ref: beta
-          path: site/beta
-
-      - name: Experimental-Version (experimental) holen
-        if: steps.branches.outputs.experimental == 'true'
-        uses: actions/checkout@v4
-        with:
-          ref: experimental
-          path: site/experimental
-
       - name: Nicht benötigte Dateien entfernen
-        run: rm -rf site/.git site/.github site/beta/.git site/beta/.github site/experimental/.git site/experimental/.github
+        run: rm -rf site/.git site/.github
+
+      # Früher lagen Beta und Experimental unter …/abfahrt/beta/ und …/abfahrt/experimental/.
+      # Dort bleibt nur eine Umleitung auf die neuen Adressen.
+      - name: Umleitungen für die alten Adressen
+        if: github.repository == 'einschlawiner-technic/abfahrt'
+        run: |
+          for ch in beta experimental; do
+            mkdir -p "site/$ch"
+            cat > "site/$ch/index.html" <<HTML
+          <!doctype html>
+          <meta charset="utf-8">
+          <title>Umgezogen</title>
+          <meta http-equiv="refresh" content="0; url=/abfahrt-$ch/">
+          <script>location.replace("/abfahrt-$ch/" + location.search + location.hash);</script>
+          <p>Neue Adresse: <a href="/abfahrt-$ch/">/abfahrt-$ch/</a></p>
+          HTML
+          done
 
       - uses: actions/configure-pages@v5
 
