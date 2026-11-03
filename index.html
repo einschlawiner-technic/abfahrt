@@ -532,13 +532,20 @@ $("#update-btn").addEventListener("click", () => {
 
 if ("serviceWorker" in navigator) {
   navigator.serviceWorker.register("sw.js", { updateViaCache: "none" }).then((reg) => {
-    if (reg.waiting && navigator.serviceWorker.controller) showUpdateBar(reg.waiting);
+    // Hinweis nur, wenn schon eine ältere Version DIESER App aktiv ist (nicht bei der Erstinstallation;
+    // die Beta wird anfangs vom Service Worker der Produktivversion mitverwaltet)
+    if (reg.waiting && reg.active) showUpdateBar(reg.waiting);
     reg.addEventListener("updatefound", () => {
       const w = reg.installing;
+      const hadOld = !!reg.active;
       w.addEventListener("statechange", () => {
-        if (w.state === "installed" && navigator.serviceWorker.controller) showUpdateBar(w);
+        if (w.state === "installed" && hadOld) showUpdateBar(w);
       });
     });
+    // Versionsnummer beim eigenen Service Worker abfragen
+    const askVersion = () => reg.active && reg.active.postMessage("version");
+    askVersion();
+    navigator.serviceWorker.addEventListener("controllerchange", askVersion);
     // Nach neuer Version schauen: beim Zurückkehren in die App und alle 30 Minuten
     const check = () => reg.update().catch(() => {});
     document.addEventListener("visibilitychange", () => { if (!document.hidden) check(); });
@@ -549,7 +556,6 @@ if ("serviceWorker" in navigator) {
   navigator.serviceWorker.addEventListener("message", (e) => {
     if (e.data && e.data.version) document.querySelectorAll(".version").forEach((el) => el.textContent = "Version " + e.data.version);
   });
-  navigator.serviceWorker.ready.then((reg) => reg.active && reg.active.postMessage("version"));
 }
 </script>
 </body>
