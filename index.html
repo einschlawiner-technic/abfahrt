@@ -364,7 +364,7 @@ function openStation(st, push = true) {
   document.title = st.n + " – " + APP_NAME;
   $("#scotty").href = BASE + "stboard.exe/dn?input=" + encodeURIComponent(st.id) + "&boardType=dep&start=yes";
   updateFavIcon();
-  lastUpdate = 0; showUpdated();
+  lastUpdate = 0; failures = 0; showUpdated();
   $("#rows").innerHTML = "";
   showMsg("Lade Abfahrten …");
   window.scrollTo(0, 0);
@@ -426,6 +426,10 @@ function badgeClass(pr) {
   return "u";
 }
 
+// Fehlversuche in Folge: ein einzelner Aussetzer wird still wiederholt, erst ab dem zweiten gibt es eine Meldung
+let failures = 0;
+const RETRY_MS = 5000;
+
 async function load() {
   clearTimeout(refreshTimer);
   const st = current;
@@ -433,19 +437,25 @@ async function load() {
   const url = BASE + "stboard.exe/dn?L=vs_scotty.vs_liveticker&evaId=" + encodeURIComponent(st.id) +
     "&boardType=dep&productsFilter=" + FILTERS[filter] +
     "&dirInput=&tickerID=dep&start=yes&eqstops=true&showJourneys=40&additionalTime=0&outputMode=tickerDataOnly";
+  let ok = false;
   try {
     const data = await loadScript(url, "journeysObj");
     if (current !== st) return;
     if (!data) throw new Error("Unerwartete Antwort");
     render(data);
     lastUpdate = Date.now();
+    failures = 0;
+    ok = true;
     showUpdated();
   } catch (err) {
     if (current !== st) return;
-    if (!$("#rows").children.length) showMsg(err.message + " – neuer Versuch in 30 s", true);
+    failures++;
+    if (failures >= 2 && !$("#rows").children.length) showMsg(err.message + " – neuer Versuch in 30 s", true);
     showUpdated();
   }
-  if (current === st) refreshTimer = setTimeout(load, REFRESH_MS);
+  // Im Hintergrund nicht weiter abfragen; beim Zurückkehren lädt die App sofort neu.
+  // Nach dem ersten Fehlversuch schon nach 5 s erneut versuchen, sonst im normalen 30-s-Takt.
+  if (current === st && !document.hidden) refreshTimer = setTimeout(load, !ok && failures === 1 ? RETRY_MS : REFRESH_MS);
 }
 
 // „aktualisiert vor x s“ – wird rot, wenn länger als 90 s keine neuen Daten kamen
@@ -504,7 +514,11 @@ function render(data) {
 }
 
 // Aktualisieren, wenn die App wieder in den Vordergrund kommt
-document.addEventListener("visibilitychange", () => { if (!document.hidden && current) load(); });
+// Im Hintergrund pausieren, beim Zurückkehren sofort aktualisieren
+document.addEventListener("visibilitychange", () => {
+  if (document.hidden) clearTimeout(refreshTimer);
+  else if (current) load();
+});
 
 // ---------- Start ----------
 const params = new URLSearchParams(location.search);
