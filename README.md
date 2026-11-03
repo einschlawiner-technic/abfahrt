@@ -290,6 +290,7 @@ Korrekturen an der Produktivversion, die nicht über die Beta laufen, direkt in 
 
 - Knopf „Livekarte“ auf der Abfahrtstafel öffnet die ÖBB-Karte (dort Menü → Karte), um Fahrzeuge live zu sehen
 - enthält die Korrekturen aus 1.0.3
+
 ### 1.0.3 – November 2026
 
 - Korrektur: Produktiv- und Beta-Version haben eigene App-Kennungen und lassen sich gleichzeitig installieren
