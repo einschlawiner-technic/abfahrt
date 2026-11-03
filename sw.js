@@ -1,9 +1,19 @@
-// Speichert nur die App-Hülle; Abfahrtsdaten kommen immer live von ÖBB.
-const CACHE = "abfahrt-v7";
+// Speichert die App-Hülle; Abfahrtsdaten kommen immer live von ÖBB.
+// Bei jeder Änderung VERSION erhöhen – dann erkennt das Handy die neue Version
+// und zeigt den Hinweis „Neue Version verfügbar“.
+const VERSION = "8";
+const CACHE = "abfahrt-v" + VERSION;
 const SHELL = ["./", "index.html", "stations.js", "manifest.json", "icon.svg", "icon-192.png", "icon-512.png", "apple-touch-icon.png"];
 
 self.addEventListener("install", (e) => {
-  e.waitUntil(caches.open(CACHE).then((c) => c.addAll(SHELL)).then(() => self.skipWaiting()));
+  // Neue Version vorab laden (am HTTP-Cache vorbei), aber noch nicht aktivieren:
+  // sie wartet, bis der Nutzer auf „Aktualisieren“ tippt.
+  e.waitUntil(caches.open(CACHE).then((c) => c.addAll(SHELL.map((u) => new Request(u, { cache: "reload" })))));
+});
+
+self.addEventListener("message", (e) => {
+  if (e.data === "update") self.skipWaiting();
+  if (e.data === "version") e.source.postMessage({ version: VERSION });
 });
 
 self.addEventListener("activate", (e) => {
@@ -16,15 +26,13 @@ self.addEventListener("activate", (e) => {
 
 self.addEventListener("fetch", (e) => {
   const url = new URL(e.request.url);
-  if (url.origin !== location.origin) return;
-  // Netzwerk zuerst, damit Updates sofort ankommen; offline aus dem Cache
+  if (url.origin !== location.origin || e.request.method !== "GET") return;
+  // Cache zuerst: die App bleibt auf ihrer Version, bis aktualisiert wird; offline klappt der Start.
+  // Seitenaufrufe mit ?id=… bekommen immer die gespeicherte index.html.
+  const key = e.request.mode === "navigate" ? "index.html" : e.request;
   e.respondWith(
-    fetch(e.request)
-      .then((res) => {
-        const copy = res.clone();
-        caches.open(CACHE).then((c) => c.put(e.request, copy));
-        return res;
-      })
-      .catch(() => caches.match(e.request, { ignoreSearch: true }))
+    caches.open(CACHE)
+      .then((c) => c.match(key, { ignoreSearch: true }))
+      .then((hit) => hit || fetch(e.request))
   );
 });

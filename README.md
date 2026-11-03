@@ -199,12 +199,15 @@ Das Blinken (1,8 s pro Takt) ist in CSS die Animation `blink`; die Geschwindigke
 
 ## Offline und Updates
 
-Der Service Worker (`sw.js`) speichert die App-Dateien im Browser:
-- Er versucht immer zuerst das Netz – Änderungen kommen also sofort an.
-- Ohne Netz liefert er die gespeicherte Version, damit die App trotzdem startet (Abfahrten gibt es dann natürlich keine).
-- Die Abfahrtsdaten selbst werden **nie** zwischengespeichert.
+Der Service Worker (`sw.js`) speichert die App-Dateien im Browser und steuert die Updates:
 
-Bei jeder Änderung die Versionsnummer in `sw.js` erhöhen (`const CACHE = "abfahrt-v5"` → `"abfahrt-v6"`), damit alte Kopien sicher gelöscht werden.
+- **Cache zuerst:** Die App startet immer aus der gespeicherten Version – schnell und auch ohne Netz (Abfahrten gibt es dann natürlich keine). Die Abfahrtsdaten selbst werden **nie** zwischengespeichert.
+- **Neue Version erkennen:** Beim Öffnen, beim Zurückkehren in die App und alle 30 Minuten fragt der Browser, ob sich `sw.js` geändert hat. Wenn ja, lädt er die neue Version im Hintergrund, aktiviert sie aber noch nicht.
+- **Hinweis:** Unten erscheint „Neue Version verfügbar – Favoriten bleiben erhalten“ mit dem Button **Aktualisieren**.
+- **Aktualisieren** löscht „Zuletzt gewählt“ und alte Einstellungen, behält die **Favoriten**, aktiviert die neue Version, löscht den alten Cache und lädt die App neu.
+- Unten in der App steht die aktuelle **Versionsnummer**.
+
+**Bei jeder Änderung `VERSION` in `sw.js` erhöhen** (z. B. `"8"` → `"9"`). Nur dann erkennen installierte Apps, dass es etwas Neues gibt.
 
 ## Änderungen machen und veröffentlichen
 
@@ -224,7 +227,7 @@ git commit -m "Beschreibung der Änderung"
 git push
 ```
 
-GitHub Pages baut die Seite danach automatisch neu; nach etwa einer Minute ist die neue Version online. Installierte Apps holen sie beim nächsten Öffnen (notfalls App ganz schließen und neu öffnen).
+GitHub Pages baut die Seite danach automatisch neu; nach etwa einer Minute ist die neue Version online. Installierte Apps zeigen dann beim nächsten Öffnen den Hinweis „Neue Version verfügbar“ (vorausgesetzt, `VERSION` in `sw.js` wurde erhöht).
 
 Kleine Änderungen gehen auch direkt auf github.com: Datei öffnen → Stift-Symbol → bearbeiten → „Commit changes“.
 
