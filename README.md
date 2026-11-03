@@ -286,6 +286,10 @@ Korrekturen an der Produktivversion, die nicht über die Beta laufen, direkt in 
 
 ## Versionen
 
+### 1.1-beta.1 – Testversion
+
+- Knopf „Livekarte“ auf der Abfahrtstafel öffnet die ÖBB-Karte (dort Menü → Karte), um Fahrzeuge live zu sehen
+
 ### 1.0.1 – November 2026
 
 - Grundlage für die Beta-Version: Produktiv- und Testversion laufen getrennt nebeneinander (eigene Daten, eigener Name, eigenes Icon)
