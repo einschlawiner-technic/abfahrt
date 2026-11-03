@@ -1,7 +1,7 @@
 // Speichert die App-Hülle; Abfahrtsdaten kommen immer live von ÖBB.
 // Bei jeder Änderung VERSION erhöhen – dann erkennt das Handy die neue Version
 // und zeigt den Hinweis „Neue Version verfügbar“.
-const VERSION = "8";
+const VERSION = "1.0";
 const CACHE = "abfahrt-v" + VERSION;
 const SHELL = ["./", "index.html", "stations.js", "manifest.json", "icon.svg", "icon-192.png", "icon-512.png", "apple-touch-icon.png"];
 

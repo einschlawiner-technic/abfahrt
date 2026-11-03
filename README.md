@@ -1,5 +1,7 @@
 # Abfahrt Wien & NÖ
 
+**Version 1.0** · November 2026
+
 Kleine Web-App (PWA): Bahnhof oder Haltestelle in Wien oder Niederösterreich wählen und die Live-Abfahrten wie auf der Bahnhofsanzeige sehen.
 
 **Adresse:** https://einschlawiner-technic.github.io/abfahrt/
@@ -18,6 +20,7 @@ Kleine Web-App (PWA): Bahnhof oder Haltestelle in Wien oder Niederösterreich w�
 8. [Offline und Updates (Service Worker)](#offline-und-updates)
 9. [Änderungen machen und veröffentlichen](#änderungen-machen-und-veröffentlichen)
 10. [Grenzen und Risiken](#grenzen-und-risiken)
+11. [Versionen](#versionen)
 
 ---
 
@@ -207,7 +210,12 @@ Der Service Worker (`sw.js`) speichert die App-Dateien im Browser und steuert di
 - **Aktualisieren** löscht „Zuletzt gewählt“ und alte Einstellungen, behält die **Favoriten**, aktiviert die neue Version, löscht den alten Cache und lädt die App neu.
 - Unten in der App steht die aktuelle **Versionsnummer**.
 
-**Bei jeder Änderung `VERSION` in `sw.js` erhöhen** (z. B. `"8"` → `"9"`). Nur dann erkennen installierte Apps, dass es etwas Neues gibt.
+**Bei jeder Änderung `VERSION` in `sw.js` erhöhen.** Nur dann erkennen installierte Apps, dass es etwas Neues gibt. Schema:
+- kleine Korrekturen: `1.0` → `1.0.1`
+- neue Funktionen: `1.0` → `1.1`
+- große Umbauten: `1.x` → `2.0`
+
+Zu jeder Version einen Eintrag unter [Versionen](#versionen) ergänzen und den Stand in Git markieren: `git tag v1.1 && git push origin v1.1`.
 
 ## Änderungen machen und veröffentlichen
 
@@ -239,3 +247,19 @@ Kleine Änderungen gehen auch direkt auf github.com: Datei öffnen → Stift-Sym
 - **„Grün“ heißt „keine Abweichung gemeldet“:** Die ÖBB liefern Echtzeitdaten nur bei Abweichungen. Bei Zügen ohne Echtzeit-Erfassung bedeutet Grün daher nur „laut Plan“.
 - **Favoriten pro Gerät:** Sie liegen im `localStorage` des Browsers und werden nicht zwischen Handy und PC abgeglichen. Browserdaten löschen entfernt sie.
 - **Öffentlich:** Das Repository und die Seite sind öffentlich einsehbar (nötig für kostenloses GitHub Pages). Es sind keine persönlichen Daten darin.
+
+## Versionen
+
+### 1.0 – November 2026
+
+Erste offizielle Version.
+
+- Stationsauswahl: 46 Bahnhöfe in Wien und Niederösterreich, Suche nach jedem Bahnhof und jeder Haltestelle in Wien/NÖ
+- Live-Abfahrtstafel im Bahnhofsstil mit Verspätungen, Ausfällen, Gleisänderungen und Zusatzfahrten
+- Statuspunkte (grün/gelb/rot), Blinken kurz vor der Abfahrt
+- Automatische Aktualisierung alle 30 Sekunden mit Anzeige des Datenstands
+- Filter „Nur Züge“ / „Alle Verkehrsmittel“; Standard je nach Bahnhof oder Haltestelle
+- Favoriten und zuletzt gewählte Stationen, Direktlinks pro Station
+- Installierbar auf Android, iPhone und PC; Kurzauswahl am Android-Icon
+- Hinweis auf neue Versionen mit „Aktualisieren“-Button (Favoriten bleiben erhalten)
+- Offline-Start der App
