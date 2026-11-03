@@ -286,8 +286,10 @@ Korrekturen an der Produktivversion, die nicht über die Beta laufen, direkt in 
 
 ## Versionen
 
-### 1.1-beta.4 – Testversion
+### 1.1-beta.5 – Testversion
 
+- Im Hintergrund keine Abfragen mehr; beim Zurückkehren sofortige Aktualisierung
+- Einzelne Verbindungsaussetzer werden nach 5 s still wiederholt; eine Fehlermeldung erscheint erst nach zwei Fehlversuchen in Folge
 - Knopf „Livekarte“ auf der Abfahrtstafel öffnet direkt die ÖBB-Livekarte, zentriert auf die gewählte Station (Link-Parameter `showLivemap=true&X=…&Y=…`; die Zoomstufe legt die ÖBB-Seite fest)
 - Stationsliste mit Koordinaten
 - enthält die Korrekturen aus 1.0.3
