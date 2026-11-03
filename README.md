@@ -1,6 +1,6 @@
 # Abfahrt Wien & NÖ
 
-Kleine Web-App (PWA): Bahnhof in Wien oder Niederösterreich wählen und die Live-Abfahrten wie auf der Bahnhofsanzeige sehen.
+Kleine Web-App (PWA): Bahnhof oder Haltestelle in Wien oder Niederösterreich wählen und die Live-Abfahrten wie auf der Bahnhofsanzeige sehen.
 
 **Adresse:** https://einschlawiner-technic.github.io/abfahrt/
 

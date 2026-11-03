@@ -152,10 +152,10 @@
 <body>
 
 <header>
-  <button id="back" class="iconbtn hidden" aria-label="Bahnhof wählen">
+  <button id="back" class="iconbtn hidden" aria-label="Station wählen">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>
   </button>
-  <h1 id="title">Bahnhof wählen</h1>
+  <h1 id="title">Station wählen</h1>
   <button id="fav" class="iconbtn hidden" aria-label="Als Favorit merken">
     <svg viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path id="favpath" fill="none" d="M12 3l2.8 5.7 6.2.9-4.5 4.4 1.1 6.2L12 17.3 6.4 20.2l1.1-6.2L3 9.6l6.2-.9z"/></svg>
   </button>
@@ -164,7 +164,7 @@
 
 <!-- Bahnhofsauswahl -->
 <main id="picker">
-  <input id="search" type="search" placeholder="Bahnhof suchen …" autocomplete="off">
+  <input id="search" type="search" placeholder="Bahnhof oder Haltestelle suchen …" autocomplete="off">
   <div id="results"></div>
   <div id="lists"></div>
 </main>
@@ -288,7 +288,7 @@ $("#search").addEventListener("input", (e) => {
 function showResults(list, hint) {
   $("#results").innerHTML =
     (list.length ? `<ul class="list">${list.map(s => stationButton(s)).join("")}</ul>` : "") +
-    (hint ? `<div class="hint">${esc(hint)}</div>` : (list.length ? "" : `<div class="hint">Kein Bahnhof in Wien/NÖ gefunden.</div>`));
+    (hint ? `<div class="hint">${esc(hint)}</div>` : (list.length ? "" : `<div class="hint">Keine Station in Wien/NÖ gefunden.</div>`));
 }
 
 document.addEventListener("click", (e) => {
@@ -334,7 +334,7 @@ function showPicker() {
   $("#picker").classList.remove("hidden");
   $("#back").classList.add("hidden");
   $("#fav").classList.add("hidden");
-  $("#title").textContent = "Bahnhof wählen";
+  $("#title").textContent = "Station wählen";
   document.title = "Abfahrt";
   $("#search").value = "";
   $("#results").innerHTML = "";
@@ -467,7 +467,7 @@ const params = new URLSearchParams(location.search);
 if (params.get("id")) {
   const id = params.get("id");
   const known = STATIONS.find(s => s.id === id) || favorites().find(s => s.id === id) || recent().find(s => s.id === id);
-  const st = { id, n: params.get("n") || known?.n || "Bahnhof", bahn: params.get("hst") ? false : (known?.bahn ?? true) };
+  const st = { id, n: params.get("n") || known?.n || "Station", bahn: params.get("hst") ? false : (known?.bahn ?? true) };
   history.replaceState({ st }, "", location.href);
   openStation(st, false);
 } else {
