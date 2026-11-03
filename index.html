@@ -211,7 +211,7 @@
   <div class="toolbar">
     <button class="chip on" data-filter="train">Nur Züge</button>
     <button class="chip" data-filter="all">Alle Verkehrsmittel</button>
-    <a class="chip maplink" href="https://fahrplan.oebb.at/webapp/" target="_blank" rel="noopener" title="Fahrzeuge live auf der ÖBB-Karte (dort Menü → Karte)">
+    <a class="chip maplink" id="maplink" href="https://fahrplan.oebb.at/webapp/?showLivemap=true" target="_blank" rel="noopener" title="Fahrzeuge live auf der ÖBB-Karte rund um diese Station">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 4 3 6v14l6-2 6 2 6-2V4l-6 2-6-2z"/><path d="M9 4v14M15 6v14"/></svg>
       Livekarte
     </a>
@@ -287,7 +287,7 @@ function favorites() { return store.get("favs", []); }
 function recent() { return store.get("recent", []); }
 
 function stationButton(st, starred) {
-  return `<li><button data-id="${esc(st.id)}" data-name="${esc(st.n)}" data-bahn="${st.bahn === false ? 0 : 1}">
+  return `<li><button data-id="${esc(st.id)}" data-name="${esc(st.n)}" data-bahn="${st.bahn === false ? 0 : 1}" data-x="${st.x || ""}" data-y="${st.y || ""}">
     <span>${esc(st.n)}</span>${starred ? '<span class="star">★</span>' : ""}</button></li>`;
 }
 
@@ -326,7 +326,7 @@ $("#search").addEventListener("input", (e) => {
         .filter(x => x.type === "1")
         .filter(x => { const X = x.xcoord / 1e6, Y = x.ycoord / 1e6; return X > 14.4 && X < 17.2 && Y > 47.4 && Y < 49.1; })
         // prodClass: Bitmaske der Verkehrsmittel; die unteren 6 Bits sind Bahn → sonst reine Bus/Bim/U-Bahn-Haltestelle
-        .map(x => ({ n: unescapeHtml(x.value), id: String(+x.extId), bahn: (x.prodClass & 63) > 0 }));
+        .map(x => ({ n: unescapeHtml(x.value), id: String(+x.extId), bahn: (x.prodClass & 63) > 0, x: +x.xcoord, y: +x.ycoord }));
       const seen = new Set(local.map(s => s.id));
       showResults(local.concat(found.filter(f => !seen.has(f.id) && seen.add(f.id))), "");
     } catch (err) {
@@ -343,7 +343,7 @@ function showResults(list, hint) {
 
 document.addEventListener("click", (e) => {
   const b = e.target.closest("button[data-id]");
-  if (b) openStation({ id: b.dataset.id, n: b.dataset.name, bahn: b.dataset.bahn !== "0" });
+  if (b) openStation({ id: b.dataset.id, n: b.dataset.name, bahn: b.dataset.bahn !== "0", x: +b.dataset.x || undefined, y: +b.dataset.y || undefined });
 });
 
 // ---------- Tafel ----------
@@ -369,6 +369,9 @@ function openStation(st, push = true) {
   $("#title").textContent = st.n;
   document.title = st.n + " – " + APP_NAME;
   $("#scotty").href = BASE + "stboard.exe/dn?input=" + encodeURIComponent(st.id) + "&boardType=dep&start=yes";
+  // Livekarte: ÖBB-Seite öffnet direkt die Karte, zentriert auf die Station (Zoom legt die ÖBB-Seite fest)
+  if (!st.x) Object.assign(st, (({ x, y }) => ({ x, y }))(STATIONS.find(s => s.id === st.id) || {}));
+  $("#maplink").href = "https://fahrplan.oebb.at/webapp/?showLivemap=true" + (st.x && st.y ? "&X=" + st.x + "&Y=" + st.y : "");
   updateFavIcon();
   lastUpdate = 0; showUpdated();
   $("#rows").innerHTML = "";
@@ -408,7 +411,7 @@ function updateFavIcon() {
 $("#fav").addEventListener("click", () => {
   let favs = favorites();
   if (favs.some(f => f.id === current.id)) favs = favs.filter(f => f.id !== current.id);
-  else favs.push({ id: current.id, n: current.n, bahn: current.bahn });
+  else favs.push({ id: current.id, n: current.n, bahn: current.bahn, x: current.x, y: current.y });
   store.set("favs", favs);
   updateFavIcon();
 });
@@ -517,7 +520,7 @@ const params = new URLSearchParams(location.search);
 if (params.get("id")) {
   const id = params.get("id");
   const known = STATIONS.find(s => s.id === id) || favorites().find(s => s.id === id) || recent().find(s => s.id === id);
-  const st = { id, n: params.get("n") || known?.n || "Station", bahn: params.get("hst") ? false : (known?.bahn ?? true) };
+  const st = { id, n: params.get("n") || known?.n || "Station", bahn: params.get("hst") ? false : (known?.bahn ?? true), x: known?.x, y: known?.y };
   history.replaceState({ st }, "", location.href);
   openStation(st, false);
 } else {

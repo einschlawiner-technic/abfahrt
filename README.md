@@ -286,9 +286,10 @@ Korrekturen an der Produktivversion, die nicht über die Beta laufen, direkt in 
 
 ## Versionen
 
-### 1.1-beta.3 – Testversion
+### 1.1-beta.4 – Testversion
 
-- Knopf „Livekarte“ auf der Abfahrtstafel öffnet die ÖBB-Karte (dort Menü → Karte), um Fahrzeuge live zu sehen
+- Knopf „Livekarte“ auf der Abfahrtstafel öffnet direkt die ÖBB-Livekarte, zentriert auf die gewählte Station (Link-Parameter `showLivemap=true&X=…&Y=…`; die Zoomstufe legt die ÖBB-Seite fest)
+- Stationsliste mit Koordinaten
 - enthält die Korrekturen aus 1.0.3
 
 ### 1.0.3 – November 2026

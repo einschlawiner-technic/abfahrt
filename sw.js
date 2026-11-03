@@ -1,7 +1,7 @@
 // Speichert die App-Hülle; Abfahrtsdaten kommen immer live von ÖBB.
 // Bei jeder Änderung VERSION erhöhen – dann erkennt das Handy die neue Version
 // und zeigt den Hinweis „Neue Version verfügbar“.
-const VERSION = "1.1-beta.3";
+const VERSION = "1.1-beta.4";
 
 // Dieselbe Datei läuft als Produktivversion (…/abfahrt/) und als Beta (…/abfahrt/beta/).
 // Beide bekommen eigene Cache-Namen und kommen sich nicht in die Quere.
