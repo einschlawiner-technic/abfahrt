@@ -1,6 +1,6 @@
 # Abfahrt Wien & NÖ
 
-**Version 1.0.1** · November 2026
+**Version 1.0.2** · November 2026
 
 Kleine Web-App (PWA): Bahnhof oder Haltestelle in Wien oder Niederösterreich wählen und die Live-Abfahrten wie auf der Bahnhofsanzeige sehen.
 
@@ -285,6 +285,10 @@ Korrekturen an der Produktivversion, die nicht über die Beta laufen, direkt in 
 - **Öffentlich:** Das Repository und die Seite sind öffentlich einsehbar (nötig für kostenloses GitHub Pages). Es sind keine persönlichen Daten darin.
 
 ## Versionen
+
+### 1.0.2 – November 2026
+
+- Korrektur: Die Beta-Adresse funktioniert jetzt auch ohne Schrägstrich am Ende (`…/abfahrt/beta`)
 
 ### 1.0.1 – November 2026
 
