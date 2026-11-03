@@ -1,11 +1,12 @@
 # Abfahrt Wien & NÖ
 
-**Version 1.0.4** · November 2026
+**Version 1.0.5** · November 2026
 
 Kleine Web-App (PWA): Bahnhof oder Haltestelle in Wien oder Niederösterreich wählen und die Live-Abfahrten wie auf der Bahnhofsanzeige sehen.
 
-**Adresse:** https://einschlawiner-technic.github.io/abfahrt/
-**Testversion (Beta):** https://einschlawiner-technic.github.io/abfahrt/beta/
+**Adresse:** https://einschlawiner-technic.github.io/abfahrt/  
+**Testversion (Beta):** https://einschlawiner-technic.github.io/abfahrt/beta/  
+**Experimentierversion:** https://einschlawiner-technic.github.io/abfahrt/experimental/
 
 ---
 
@@ -20,7 +21,7 @@ Kleine Web-App (PWA): Bahnhof oder Haltestelle in Wien oder Niederösterreich w�
 7. [Anzeige-Logik (Farben, Punkte, Hinweise)](#anzeige-logik)
 8. [Offline und Updates (Service Worker)](#offline-und-updates)
 9. [Änderungen machen und veröffentlichen](#änderungen-machen-und-veröffentlichen)
-10. [Beta-Version zum Testen](#beta-version-zum-testen)
+10. [Drei Kanäle: Produktiv, Beta, Experimental](#drei-kanäle-produktiv-beta-experimental)
 11. [Grenzen und Risiken](#grenzen-und-risiken)
 12. [Versionen](#versionen)
 
@@ -54,7 +55,7 @@ Shortcut für einen einzelnen Bahnhof: Tafel des Bahnhofs im Browser öffnen und
 |---|---|
 | **Sprachen** | HTML, CSS und JavaScript – ohne Framework, ohne Build-Schritt |
 | **App-Typ** | PWA (Progressive Web App): eine Webseite, die sich wie eine App installieren lässt |
-| **Hosting** | GitHub Pages (kostenlos, HTTPS), veröffentlicht per GitHub Actions aus den Branches `main` und `beta` |
+| **Hosting** | GitHub Pages (kostenlos, HTTPS), veröffentlicht per GitHub Actions aus den Branches `main`, `beta` und `experimental` |
 | **Server** | keiner – jedes Gerät holt die Daten direkt bei der ÖBB |
 | **Daten** | ÖBB-Fahrplanauskunft „Scotty“ (HAFAS-System) |
 | **Speicher** | `localStorage` im Browser für Favoriten, Verlauf und Filter |
@@ -66,10 +67,11 @@ Warum so einfach? Für eine Anzeige-App reicht der Browser vollständig. Ohne Fr
 | Datei | Zweck |
 |---|---|
 | `index.html` | Die ganze App: Aufbau (HTML), Aussehen (CSS im `<style>`-Block) und Logik (JavaScript im `<script>`-Block) |
-| `stations.js` | Liste der Bahnhöfe mit Name, Gruppe (Wien/NÖ) und ÖBB-Stations-ID |
-| `manifest.json` | Web-App-Manifest: Name, Farben, Icons, Kurzauswahl – macht die Seite installierbar |
+| `stations.js` | Liste der Bahnhöfe mit Name, Gruppe (Wien/NÖ), ÖBB-Stations-ID und Koordinaten |
+| `features.js` | Funktionsschalter: welche Funktion in welchem Kanal aktiv ist |
+| `manifest.json` | Web-App-Manifest: Name, Farben, Icons, Kurzauswahl – macht die Seite installierbar (`manifest-beta.json`, `manifest-experimental.json` für die anderen Kanäle) |
 | `sw.js` | Service Worker: speichert die App-Dateien für schnellen Start und offline |
-| `icon.svg` | App-Icon als Vektorgrafik (auch Browser-Tab-Symbol) |
+| `icon.svg` | App-Icon als Vektorgrafik (auch Browser-Tab-Symbol); `-beta` (orange) und `-experimental` (lila) für die anderen Kanäle |
 | `icon-192.png`, `icon-512.png` | Icons für Android und PC |
 | `apple-touch-icon.png` | Icon für das iPhone (180 × 180) |
 
@@ -212,7 +214,7 @@ Der Service Worker (`sw.js`) speichert die App-Dateien im Browser und steuert di
 - **Aktualisieren** löscht „Zuletzt gewählt“ und alte Einstellungen, behält die **Favoriten**, aktiviert die neue Version, löscht den alten Cache und lädt die App neu.
 - Unten in der App steht die aktuelle **Versionsnummer**.
 
-**Bei jeder Änderung `VERSION` in `sw.js` erhöhen.** Nur dann erkennen installierte Apps, dass es etwas Neues gibt. Schema:
+**Bei jeder Änderung die Versionsnummer des betroffenen Kanals in `VERSIONS` (in `sw.js`) erhöhen.** Nur dann erkennen installierte Apps, dass es etwas Neues gibt. Schema:
 - kleine Korrekturen: `1.0` → `1.0.1`
 - neue Funktionen: `1.0` → `1.1`
 - große Umbauten: `1.x` → `2.0`
@@ -237,45 +239,57 @@ git commit -m "Beschreibung der Änderung"
 git push
 ```
 
-GitHub Pages baut die Seite danach automatisch neu; nach etwa einer Minute ist die neue Version online. Installierte Apps zeigen dann beim nächsten Öffnen den Hinweis „Neue Version verfügbar“ (vorausgesetzt, `VERSION` in `sw.js` wurde erhöht).
+GitHub Pages baut die Seite danach automatisch neu; nach etwa einer Minute ist die neue Version online. Installierte Apps zeigen dann beim nächsten Öffnen den Hinweis „Neue Version verfügbar“ (vorausgesetzt, die Versionsnummer in `sw.js` wurde erhöht).
 
 Kleine Änderungen gehen auch direkt auf github.com: Datei öffnen → Stift-Symbol → bearbeiten → „Commit changes“.
 
 **Icons neu erzeugen:** `icon.svg` ist die Vorlage. Die PNG-Dateien wurden mit Python/Pillow daraus nachgezeichnet; alternativ jedes Grafikprogramm verwenden und als 512 × 512, 192 × 192 und 180 × 180 (`apple-touch-icon.png`) exportieren. Das Motiv sollte im inneren Kreis (80 % der Breite) bleiben, weil Android Icons rund zuschneiden kann.
 
-## Beta-Version zum Testen
+## Drei Kanäle: Produktiv, Beta, Experimental
 
-Neue Funktionen kommen zuerst in eine **Testversion**, die neben der Produktivversion läuft.
+| | Produktiv | Beta | Experimental |
+|---|---|---|---|
+| Zweck | tägliche Nutzung | freigegebene Änderungen, letzte Probe vor Produktiv | Spielwiese; manches bleibt für immer hier |
+| Branch | `main` | `beta` | `experimental` |
+| Adresse | `…/abfahrt/` | `…/abfahrt/beta/` | `…/abfahrt/experimental/` |
+| App-Name | Abfahrt | Abfahrt Beta | Abfahrt Experimental |
+| Icon / Kennzeichen | rot | orange, „BETA“ | lila, „EXP“ |
+| Speicher-Präfix | – | `beta:` | `exp:` |
+| Versionsnummer | z. B. `1.0.5` | z. B. `1.1-beta.1` | z. B. `1.1-exp.1` |
 
-| | Produktiv | Beta |
-|---|---|---|
-| Branch | `main` | `beta` |
-| Adresse | `…/abfahrt/` | `…/abfahrt/beta/` |
-| App-Name | Abfahrt | Abfahrt Beta |
-| Icon | rot | orange mit „BETA“ |
-| Kennzeichen in der App | – | oranges „BETA“ oben, orange Linie |
-| Versionsnummer | z. B. `1.0.1` | z. B. `1.1-beta.1` |
+Alle drei lassen sich gleichzeitig installieren; Favoriten, „Zuletzt“ und Zwischenspeicher sind je Kanal getrennt.
 
-Beide lassen sich gleichzeitig auf demselben Handy installieren. Favoriten und „Zuletzt“ sind getrennt (die Beta speichert mit dem Präfix `beta:`), ebenso die Zwischenspeicher.
+**Ein Code, drei Kanäle.** `index.html` und `sw.js` erkennen am Pfad (`/beta/`, `/experimental/`), in welchem Kanal sie laufen (`CHANNEL`), und wählen danach Name, Manifest, Icons, Speicher-Präfix und Cache-Namen. Die Versionsnummern stehen für alle Kanäle gemeinsam in `VERSIONS` in `sw.js`. Der Workflow `.github/workflows/pages.yml` baut bei jedem Push auf einen der drei Branches alles neu: `main` ins Hauptverzeichnis, `beta` nach `beta/`, `experimental` nach `experimental/`. (Dafür: *Settings → Pages → Source: GitHub Actions* und in *Settings → Environments → github-pages* alle drei Branches erlaubt.)
 
-**Wie das technisch funktioniert:** Es ist derselbe Code. `index.html` und `sw.js` erkennen am Pfad (`/beta/`), ob sie als Beta laufen, und wählen danach Name, `manifest-beta.json`, Beta-Icons, Speicher-Präfix und Cache-Namen. Der Workflow `.github/workflows/pages.yml` baut bei jedem Push auf `main` oder `beta` die Seite neu: `main` ins Hauptverzeichnis, `beta` in den Unterordner `beta/`. (In den Repo-Einstellungen steht dafür *Settings → Pages → Source: GitHub Actions*.)
+**Funktionsschalter (`features.js`).** Jede neue Funktion bekommt einen Schalter mit der Liste der Kanäle, in denen sie aktiv ist, und wird im Code mit `feature("name")` abgefragt:
 
-**Ablauf:**
+```js
+const FEATURES = {
+  livemap: ["experimental"],              // nur in Experimental
+  // neueFunktion: ["experimental", "beta"],   // freigegeben für Beta
+  // fertigeFunktion: ["experimental", "beta", "produktiv"],
+};
+```
 
-1. Änderung im Branch `beta` machen, `VERSION` in `sw.js` auf z. B. `1.1-beta.2` setzen, committen, pushen.
-2. Am Handy in „Abfahrt Beta“ testen (der Update-Hinweis erscheint dort).
-3. Passt alles → Beta wird produktiv:
+Ist eine Funktion überall angekommen, kann ihr Schalter entfallen.
+
+**Ablauf.** Die Branches liegen immer hintereinander: `experimental` ist am weitesten, `beta` folgt, `main` zuletzt. Übernommen wird immer der ganze Stand (Fast-Forward), nie einzelne Änderungen – darum gibt es keine Konflikte.
+
+1. **Neue Idee:** im Branch `experimental` bauen, mit Schalter `["experimental"]`, Experimental-Version erhöhen (z. B. `1.1-exp.2`), pushen. Am Handy in „Abfahrt Experimental“ testen.
+2. **Für Beta freigeben:** Schalter um `"beta"` ergänzen, Beta-Version erhöhen, committen, dann `beta` nachziehen:
    ```bash
-   git switch main
-   git merge beta
-   # VERSION in sw.js auf die fertige Nummer setzen, z. B. "1.1", Eintrag unter „Versionen“ ergänzen
-   git commit -am "Version 1.1"
-   git tag v1.1
-   git push origin main v1.1
+   git switch beta && git merge --ff-only experimental && git push
    ```
-4. Danach `beta` wieder auf den Stand von `main` bringen (`git switch beta && git merge main && git push`) – bereit für die nächste Testrunde.
+   Alles, was noch nicht freigegeben ist, kommt dabei zwar als Code mit, bleibt aber per Schalter aus.
+3. **Produktiv machen:** Schalter um `"produktiv"` ergänzen, Produktiv-Version erhöhen (z. B. `1.1`), Eintrag unter [Versionen](#versionen), committen, dann:
+   ```bash
+   git switch beta && git merge --ff-only experimental
+   git switch main && git merge --ff-only beta
+   git tag v1.1 && git push origin main beta v1.1
+   ```
+4. **Korrekturen**, die alle Kanäle betreffen, ebenfalls in `experimental` machen und wie oben bis `main` durchreichen.
 
-Korrekturen an der Produktivversion, die nicht über die Beta laufen, direkt in `main` machen und anschließend `main` in `beta` übernehmen.
+Wichtig: Änderungen ohne Schalter (Korrekturen, Umbauten) wirken in jedem Kanal, sobald der Stand dorthin übernommen wird. Darum alles Neue hinter einen Schalter legen.
 
 ## Grenzen und Risiken
 
@@ -286,11 +300,15 @@ Korrekturen an der Produktivversion, die nicht über die Beta laufen, direkt in 
 
 ## Versionen
 
-### 1.1-beta.5 – Testversion
+### 1.1-exp.1 – Experimental
 
-- Knopf „Livekarte“ auf der Abfahrtstafel öffnet direkt die ÖBB-Livekarte, zentriert auf die gewählte Station (Link-Parameter `showLivemap=true&X=…&Y=…`; die Zoomstufe legt die ÖBB-Seite fest)
+- Knopf „Livekarte“ (Schalter `livemap`) öffnet direkt die ÖBB-Livekarte, zentriert auf die gewählte Station (Link-Parameter `showLivemap=true&X=…&Y=…`; Zoomstufe und Verkehrsmittel legt die ÖBB-Seite fest)
+
+### 1.0.5 – November 2026 (Produktiv und Beta)
+
+- Drei Kanäle: Produktiv, Beta und neu Experimental, jeweils mit eigenem Namen, Icon und eigenen Daten
+- Funktionsschalter (`features.js`) bestimmen, welche Funktion in welchem Kanal aktiv ist
 - Stationsliste mit Koordinaten
-- enthält die Änderungen aus 1.0.4
 
 ### 1.0.4 – November 2026
 

@@ -1,18 +1,25 @@
 // Speichert die App-Hülle; Abfahrtsdaten kommen immer live von ÖBB.
-// Bei jeder Änderung VERSION erhöhen – dann erkennt das Handy die neue Version
-// und zeigt den Hinweis „Neue Version verfügbar“.
-const VERSION = "1.1-beta.5";
+// Bei jeder Änderung die Versionsnummer des betroffenen Kanals erhöhen – dann erkennt das Handy
+// die neue Version und zeigt den Hinweis „Neue Version verfügbar“.
+const VERSIONS = {
+  produktiv: "1.0.5",
+  beta: "1.0.5",
+  experimental: "1.1-exp.1",
+};
 
-// Dieselbe Datei läuft als Produktivversion (…/abfahrt/) und als Beta (…/abfahrt/beta/).
-// Beide bekommen eigene Cache-Namen und kommen sich nicht in die Quere.
-const isBetaPath = (p) => /\/beta(\/|$)/.test(p);   // auch „…/beta“ ohne Schrägstrich
-const BETA = isBetaPath(self.location.pathname);
-const PREFIX = BETA ? "abfahrt-beta-v" : "abfahrt-v";
+// Dieselbe Datei läuft in drei Kanälen: Produktiv (…/abfahrt/), Beta (…/beta/) und Experimental (…/experimental/).
+// Jeder bekommt eigene Cache-Namen, so kommen sie sich nicht in die Quere.
+const isSubChannelPath = (p) => /\/(beta|experimental)(\/|$)/.test(p);   // auch ohne Schrägstrich am Ende
+const CHANNEL = /\/experimental(\/|$)/.test(self.location.pathname) ? "experimental"
+              : /\/beta(\/|$)/.test(self.location.pathname) ? "beta" : "produktiv";
+const VERSION = VERSIONS[CHANNEL];
+const PREFIX = { produktiv: "abfahrt-v", beta: "abfahrt-beta-v", experimental: "abfahrt-exp-v" }[CHANNEL];
 const CACHE = PREFIX + VERSION;
 const SHELL = [
-  "./", "index.html", "stations.js",
+  "./", "index.html", "stations.js", "features.js",
   "manifest.json", "icon.svg", "icon-192.png", "icon-512.png", "apple-touch-icon.png",
   "manifest-beta.json", "icon-beta.svg", "icon-beta-192.png", "icon-beta-512.png", "apple-touch-icon-beta.png",
+  "manifest-experimental.json", "icon-experimental.svg", "icon-experimental-192.png", "icon-experimental-512.png", "apple-touch-icon-experimental.png",
 ];
 
 self.addEventListener("install", (e) => {
@@ -38,8 +45,8 @@ self.addEventListener("activate", (e) => {
 self.addEventListener("fetch", (e) => {
   const url = new URL(e.request.url);
   if (url.origin !== location.origin || e.request.method !== "GET") return;
-  // Die Produktivversion lässt alles unter /beta/ in Ruhe – das gehört der Beta
-  if (!BETA && isBetaPath(url.pathname)) return;
+  // Die Produktivversion lässt alles unter /beta/ und /experimental/ in Ruhe – das gehört den anderen Kanälen
+  if (CHANNEL === "produktiv" && isSubChannelPath(url.pathname)) return;
   // Cache zuerst: die App bleibt auf ihrer Version, bis aktualisiert wird; offline klappt der Start.
   // Seitenaufrufe mit ?id=… bekommen immer die gespeicherte index.html.
   const key = e.request.mode === "navigate" ? "index.html" : e.request;

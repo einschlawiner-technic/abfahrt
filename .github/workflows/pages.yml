@@ -1,12 +1,13 @@
 # Veröffentlicht die App auf GitHub Pages:
 #   Branch main -> https://einschlawiner-technic.github.io/abfahrt/       (Produktivversion)
 #   Branch beta -> https://einschlawiner-technic.github.io/abfahrt/beta/  (Testversion)
-# Läuft bei jedem Push auf einen der beiden Branches und baut immer beide zusammen.
+#   Branch experimental -> https://einschlawiner-technic.github.io/abfahrt/experimental/  (Spielwiese)
+# Läuft bei jedem Push auf einen der Branches und baut immer alle zusammen.
 name: Pages
 
 on:
   push:
-    branches: [main, beta]
+    branches: [main, beta, experimental]
   workflow_dispatch:
 
 permissions:
@@ -31,22 +32,31 @@ jobs:
           ref: main
           path: site
 
-      - name: Prüfen, ob es einen Branch beta gibt
-        id: beta
+      - name: Prüfen, welche Branches es gibt
+        id: branches
         run: |
-          if git ls-remote --exit-code --heads "https://github.com/${{ github.repository }}.git" beta >/dev/null; then
-            echo "exists=true" >> "$GITHUB_OUTPUT"
-          fi
+          for b in beta experimental; do
+            if git ls-remote --exit-code --heads "https://github.com/${{ github.repository }}.git" "$b" >/dev/null; then
+              echo "$b=true" >> "$GITHUB_OUTPUT"
+            fi
+          done
 
       - name: Testversion (beta) holen
-        if: steps.beta.outputs.exists == 'true'
+        if: steps.branches.outputs.beta == 'true'
         uses: actions/checkout@v4
         with:
           ref: beta
           path: site/beta
 
+      - name: Experimental-Version (experimental) holen
+        if: steps.branches.outputs.experimental == 'true'
+        uses: actions/checkout@v4
+        with:
+          ref: experimental
+          path: site/experimental
+
       - name: Nicht benötigte Dateien entfernen
-        run: rm -rf site/.git site/.github site/beta/.git site/beta/.github
+        run: rm -rf site/.git site/.github site/beta/.git site/beta/.github site/experimental/.git site/experimental/.github
 
       - uses: actions/configure-pages@v5
 

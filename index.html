@@ -6,15 +6,21 @@
 <meta name="theme-color" content="#0a1a33">
 <title>Abfahrt</title>
 <script>
-  // Die Beta-Version läuft unter …/beta/ – mit eigenem Namen, Icon, Manifest und eigenen Daten,
-  // damit sich beide Versionen nebeneinander installieren lassen.
-  // „…/abfahrt/beta“ ohne Schrägstrich auf „…/abfahrt/beta/“ umleiten, sonst passen die relativen Pfade nicht
-  if (/\/beta$/.test(location.pathname)) location.replace(location.pathname + "/" + location.search + location.hash);
-  const BETA = /\/beta(\/|$)/.test(location.pathname);
-  const APP_NAME = BETA ? "Abfahrt Beta" : "Abfahrt";
-  const SFX = BETA ? "-beta" : "";
+  // Drei Kanäle aus demselben Code: Produktiv (…/abfahrt/), Beta (…/beta/) und Experimental (…/experimental/).
+  // Jeder hat eigenen Namen, Icon, Manifest und eigene Daten, damit sie sich nebeneinander installieren lassen.
+  const CHANNELS = {
+    produktiv:    { name: "Abfahrt",              sfx: "",              key: "",      tag: "" },
+    beta:         { name: "Abfahrt Beta",         sfx: "-beta",         key: "beta:", tag: "BETA" },
+    experimental: { name: "Abfahrt Experimental", sfx: "-experimental", key: "exp:",  tag: "EXP" },
+  };
+  // „…/beta“ ohne Schrägstrich auf „…/beta/“ umleiten (ebenso Experimental), sonst passen die relativen Pfade nicht
+  if (/\/(beta|experimental)$/.test(location.pathname)) location.replace(location.pathname + "/" + location.search + location.hash);
+  const CHANNEL = /\/experimental(\/|$)/.test(location.pathname) ? "experimental"
+                : /\/beta(\/|$)/.test(location.pathname) ? "beta" : "produktiv";
+  const APP_NAME = CHANNELS[CHANNEL].name;
+  const SFX = CHANNELS[CHANNEL].sfx;
   document.title = APP_NAME;
-  if (BETA) document.documentElement.classList.add("beta");
+  document.documentElement.classList.add("ch-" + CHANNEL);
   document.write(
     `<link rel="manifest" href="manifest${SFX}.json">` +
     `<link rel="icon" href="icon${SFX}.svg" type="image/svg+xml">` +
@@ -64,9 +70,12 @@
   #clock { font-variant-numeric: tabular-nums; font-size: 20px; font-weight: 600; }
 
   /* Beta-Kennzeichnung */
-  .betatag { display: none; padding: 3px 7px; border-radius: 6px; background: #ff9500; color: #000; font-size: 12px; font-weight: 800; letter-spacing: .05em; }
-  .beta .betatag { display: inline-block; }
-  .beta header { border-bottom-color: #ff9500; }
+  .betatag { display: none; padding: 3px 7px; border-radius: 6px; color: #000; font-size: 12px; font-weight: 800; letter-spacing: .05em; }
+  .ch-beta .betatag, .ch-experimental .betatag { display: inline-block; }
+  .ch-beta .betatag { background: #ff9500; }
+  .ch-beta header { border-bottom-color: #ff9500; }
+  .ch-experimental .betatag { background: #b388ff; }
+  .ch-experimental header { border-bottom-color: #b388ff; }
   .iconbtn {
     width: 40px; height: 40px; border-radius: 10px;
     display: grid; place-items: center; background: var(--board-row);
@@ -194,7 +203,7 @@
   <button id="fav" class="iconbtn hidden" aria-label="Als Favorit merken">
     <svg viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path id="favpath" fill="none" d="M12 3l2.8 5.7 6.2.9-4.5 4.4 1.1 6.2L12 17.3 6.4 20.2l1.1-6.2L3 9.6l6.2-.9z"/></svg>
   </button>
-  <span class="betatag">BETA</span>
+  <span class="betatag"></span>
   <span id="clock"></span>
 </header>
 
@@ -211,7 +220,7 @@
   <div class="toolbar">
     <button class="chip on" data-filter="train">Nur Züge</button>
     <button class="chip" data-filter="all">Alle Verkehrsmittel</button>
-    <a class="chip maplink" id="maplink" href="https://fahrplan.oebb.at/webapp/?showLivemap=true" target="_blank" rel="noopener" title="Fahrzeuge live auf der ÖBB-Karte rund um diese Station">
+    <a class="chip maplink hidden" id="maplink" href="https://fahrplan.oebb.at/webapp/?showLivemap=true" target="_blank" rel="noopener" title="Fahrzeuge live auf der ÖBB-Karte rund um diese Station">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 4 3 6v14l6-2 6 2 6-2V4l-6 2-6-2z"/><path d="M9 4v14M15 6v14"/></svg>
       Livekarte
     </a>
@@ -239,6 +248,7 @@
 </div>
 
 <script src="stations.js"></script>
+<script src="features.js"></script>
 <script>
 const $ = (s) => document.querySelector(s);
 const FILTERS = { train: "1111110000000000", all: "1111111111111111" };
@@ -246,8 +256,11 @@ const BASE = "https://fahrplan.oebb.at/bin/";
 const REFRESH_MS = 30000;
 
 // ---------- kleine Helfer ----------
-// Beta speichert unter eigenem Präfix, damit Favoriten der beiden Versionen getrennt bleiben
-const KEY = BETA ? "beta:" : "";
+// Beta und Experimental speichern unter eigenem Präfix, damit die Favoriten der Kanäle getrennt bleiben
+const KEY = CHANNELS[CHANNEL].key;
+$(".betatag").textContent = CHANNELS[CHANNEL].tag;
+// Funktionen je nach Kanal ein- oder ausblenden (siehe features.js)
+$("#maplink").classList.toggle("hidden", !feature("livemap"));
 const store = {
   get(k, d) { try { const v = localStorage.getItem(KEY + k); return v ? JSON.parse(v) : d; } catch { return d; } },
   set(k, v) { try { localStorage.setItem(KEY + k, JSON.stringify(v)); } catch {} },
