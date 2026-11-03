@@ -1,0 +1,58 @@
+# Veröffentlicht die App auf GitHub Pages:
+#   Branch main -> https://einschlawiner-technic.github.io/abfahrt/       (Produktivversion)
+#   Branch beta -> https://einschlawiner-technic.github.io/abfahrt/beta/  (Testversion)
+# Läuft bei jedem Push auf einen der beiden Branches und baut immer beide zusammen.
+name: Pages
+
+on:
+  push:
+    branches: [main, beta]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Produktivversion (main) holen
+        uses: actions/checkout@v4
+        with:
+          ref: main
+          path: site
+
+      - name: Prüfen, ob es einen Branch beta gibt
+        id: beta
+        run: |
+          if git ls-remote --exit-code --heads "https://github.com/${{ github.repository }}.git" beta >/dev/null; then
+            echo "exists=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Testversion (beta) holen
+        if: steps.beta.outputs.exists == 'true'
+        uses: actions/checkout@v4
+        with:
+          ref: beta
+          path: site/beta
+
+      - name: Nicht benötigte Dateien entfernen
+        run: rm -rf site/.git site/.github site/beta/.git site/beta/.github
+
+      - uses: actions/configure-pages@v5
+
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: site
+
+      - id: deployment
+        uses: actions/deploy-pages@v4
