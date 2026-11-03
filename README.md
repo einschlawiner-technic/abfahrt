@@ -1,6 +1,6 @@
 # Abfahrt Wien & NÖ
 
-**Version 1.0.2** · November 2026
+**Version 1.0.3** · November 2026
 
 Kleine Web-App (PWA): Bahnhof oder Haltestelle in Wien oder Niederösterreich wählen und die Live-Abfahrten wie auf der Bahnhofsanzeige sehen.
 
@@ -286,10 +286,13 @@ Korrekturen an der Produktivversion, die nicht über die Beta laufen, direkt in 
 
 ## Versionen
 
-### 1.1-beta.2 – Testversion
+### 1.1-beta.3 – Testversion
 
 - Knopf „Livekarte“ auf der Abfahrtstafel öffnet die ÖBB-Karte (dort Menü → Karte), um Fahrzeuge live zu sehen
-- enthält die Korrekturen aus 1.0.2
+- enthält die Korrekturen aus 1.0.3
+### 1.0.3 – November 2026
+
+- Korrektur: Produktiv- und Beta-Version haben eigene App-Kennungen und lassen sich gleichzeitig installieren
 
 ### 1.0.2 – November 2026
 
