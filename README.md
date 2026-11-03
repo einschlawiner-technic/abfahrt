@@ -28,7 +28,7 @@ Kleine Web-App (PWA): Bahnhof in Wien oder Niederösterreich wählen und die Liv
 - **Live-Daten:** Verspätungen (neue Zeit in Gelb), Ausfälle (durchgestrichen), Gleisänderungen, Zusatzfahrten.
 - **Statuspunkte** wie am Bahnhof: grün = planmäßig, gelb = verspätet, rot = fällt aus; der Punkt blinkt in den letzten 2 Minuten vor der Abfahrt.
 - **Automatische Aktualisierung** alle 30 Sekunden und sofort, wenn die App wieder in den Vordergrund kommt; oben steht, wie alt der Stand ist.
-- **Filter:** „Nur Züge“ oder „Alle Verkehrsmittel“ (inkl. U-Bahn, Straßenbahn, Bus).
+- **Filter:** „Nur Züge“ oder „Alle Verkehrsmittel“ (inkl. U-Bahn, Straßenbahn, Bus). Bahnhöfe öffnen standardmäßig mit „Nur Züge“, Haltestellen ohne Bahnverkehr mit „Alle Verkehrsmittel“ (erkannt am Feld `prodClass` der Stationssuche: die unteren 6 Bits stehen für Bahn). Umschalten gilt nur für die aktuelle Ansicht.
 - **Favoriten** (Stern) und **zuletzt gewählte** Bahnhöfe, gespeichert auf dem jeweiligen Gerät.
 - **Direktlinks** pro Bahnhof, z. B. `?id=1290401&n=Wien Hbf` – damit lassen sich Shortcuts für einzelne Bahnhöfe anlegen.
 

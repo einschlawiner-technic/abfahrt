@@ -237,7 +237,7 @@ function favorites() { return store.get("favs", []); }
 function recent() { return store.get("recent", []); }
 
 function stationButton(st, starred) {
-  return `<li><button data-id="${esc(st.id)}" data-name="${esc(st.n)}">
+  return `<li><button data-id="${esc(st.id)}" data-name="${esc(st.n)}" data-bahn="${st.bahn === false ? 0 : 1}">
     <span>${esc(st.n)}</span>${starred ? '<span class="star">★</span>' : ""}</button></li>`;
 }
 
@@ -275,7 +275,8 @@ $("#search").addEventListener("input", (e) => {
       const found = (window.SLs.sls?.suggestions || [])
         .filter(x => x.type === "1")
         .filter(x => { const X = x.xcoord / 1e6, Y = x.ycoord / 1e6; return X > 14.4 && X < 17.2 && Y > 47.4 && Y < 49.1; })
-        .map(x => ({ n: unescapeHtml(x.value), id: String(+x.extId) }));
+        // prodClass: Bitmaske der Verkehrsmittel; die unteren 6 Bits sind Bahn → sonst reine Bus/Bim/U-Bahn-Haltestelle
+        .map(x => ({ n: unescapeHtml(x.value), id: String(+x.extId), bahn: (x.prodClass & 63) > 0 }));
       const seen = new Set(local.map(s => s.id));
       showResults(local.concat(found.filter(f => !seen.has(f.id) && seen.add(f.id))), "");
     } catch (err) {
@@ -292,18 +293,25 @@ function showResults(list, hint) {
 
 document.addEventListener("click", (e) => {
   const b = e.target.closest("button[data-id]");
-  if (b) openStation({ id: b.dataset.id, n: b.dataset.name });
+  if (b) openStation({ id: b.dataset.id, n: b.dataset.name, bahn: b.dataset.bahn !== "0" });
 });
 
 // ---------- Tafel ----------
 let current = null, refreshTimer = null;
-let filter = store.get("filter", "train");
+let filter = "train";
+
+function setFilter(f) {
+  filter = f;
+  document.querySelectorAll(".chip[data-filter]").forEach(x => x.classList.toggle("on", x.dataset.filter === f));
+}
 
 function openStation(st, push = true) {
   current = st;
+  // Bahnhof → standardmäßig nur Züge; Haltestelle ohne Bahn → alle Verkehrsmittel
+  setFilter(st.bahn === false ? "all" : "train");
   const rec = [st].concat(recent().filter(r => r.id !== st.id)).slice(0, 6);
   store.set("recent", rec);
-  if (push) history.pushState({ st }, "", "?id=" + encodeURIComponent(st.id) + "&n=" + encodeURIComponent(st.n));
+  if (push) history.pushState({ st }, "", "?id=" + encodeURIComponent(st.id) + "&n=" + encodeURIComponent(st.n) + (st.bahn === false ? "&hst=1" : ""));
   $("#picker").classList.add("hidden");
   $("#board-wrap").classList.remove("hidden");
   $("#back").classList.remove("hidden");
@@ -350,16 +358,15 @@ function updateFavIcon() {
 $("#fav").addEventListener("click", () => {
   let favs = favorites();
   if (favs.some(f => f.id === current.id)) favs = favs.filter(f => f.id !== current.id);
-  else favs.push({ id: current.id, n: current.n });
+  else favs.push({ id: current.id, n: current.n, bahn: current.bahn });
   store.set("favs", favs);
   updateFavIcon();
 });
 
+// Umschalten gilt nur für die aktuelle Ansicht; beim nächsten Öffnen greift wieder der Standard
 document.querySelectorAll(".chip[data-filter]").forEach(c => {
-  c.classList.toggle("on", c.dataset.filter === filter);
   c.addEventListener("click", () => {
-    filter = c.dataset.filter; store.set("filter", filter);
-    document.querySelectorAll(".chip[data-filter]").forEach(x => x.classList.toggle("on", x === c));
+    setFilter(c.dataset.filter);
     $("#rows").innerHTML = ""; showMsg("Lade Abfahrten …"); load();
   });
 });
@@ -460,7 +467,7 @@ const params = new URLSearchParams(location.search);
 if (params.get("id")) {
   const id = params.get("id");
   const known = STATIONS.find(s => s.id === id) || favorites().find(s => s.id === id) || recent().find(s => s.id === id);
-  const st = { id, n: params.get("n") || known?.n || "Bahnhof" };
+  const st = { id, n: params.get("n") || known?.n || "Bahnhof", bahn: params.get("hst") ? false : (known?.bahn ?? true) };
   history.replaceState({ st }, "", location.href);
   openStation(st, false);
 } else {
